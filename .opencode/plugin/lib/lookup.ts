@@ -109,24 +109,28 @@ export class TypeLookup {
 
 	listTypeNames(
 		options: { kind?: ExtractedTypeKind[]; limit?: number } = {},
-	): string[] {
+	): { name: string; kind: ExtractedTypeKind }[] {
 		const { kind, limit = 100 } = options;
 
 		if (!this.indexed) {
 			this.buildIndex();
 		}
 
-		const names: string[] = [];
+		const results: { name: string; kind: ExtractedTypeKind }[] = [];
 		for (const [name, entries] of this.index) {
 			if (kind) {
-				const hasMatchingKind = entries.some((e) => kind.includes(e.kind));
-				if (!hasMatchingKind) continue;
+				const matchingEntry = entries.find((e) => kind.includes(e.kind));
+				if (!matchingEntry) continue;
+				results.push({ name, kind: matchingEntry.kind });
+			} else {
+				const firstEntry = entries[0];
+				if (!firstEntry) continue;
+				results.push({ name, kind: firstEntry.kind });
 			}
-			names.push(name);
-			if (names.length >= limit) break;
+			if (results.length >= limit) break;
 		}
 
-		return names.sort();
+		return results.sort((a, b) => a.name.localeCompare(b.name));
 	}
 
 	getStats(): { totalTypes: number; totalFiles: number; indexed: boolean } {

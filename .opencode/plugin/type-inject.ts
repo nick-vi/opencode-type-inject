@@ -154,22 +154,22 @@ export const TypeInjectPlugin: Plugin = async ({ directory }) => {
 						.describe("Maximum results to return. Default: 100"),
 				},
 				async execute(args) {
-					const names = typeLookup.listTypeNames({
+					const results = typeLookup.listTypeNames({
 						kind: args.kind as ExtractedTypeKind[] | undefined,
 						limit: args.limit ?? 100,
 					});
 
-					if (names.length === 0) {
+					if (results.length === 0) {
 						return "No types found in the project";
 					}
 
 					const stats = typeLookup.getStats();
 					const lines: string[] = [];
 					lines.push(
-						`Found ${stats.totalTypes} types in ${stats.totalFiles} files. Showing ${names.length}:`,
+						`Found ${stats.totalTypes} types in ${stats.totalFiles} files. Showing ${results.length}:`,
 					);
 					lines.push("");
-					lines.push(names.join(", "));
+					lines.push(results.map((r) => `${r.name} (${r.kind})`).join(", "));
 
 					return lines.join("\n");
 				},
