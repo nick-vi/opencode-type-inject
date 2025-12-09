@@ -1,0 +1,70 @@
+import { describe, expect, test } from "bun:test";
+import * as path from "node:path";
+import { TypeExtractor } from "../.opencode/plugin/lib/extractor";
+import type { Config } from "../.opencode/plugin/lib/types";
+
+const testConfig: Config = {
+	enabled: true,
+	debug: false,
+	includeJSDoc: true,
+	inject: {
+		functions: true,
+		types: true,
+		interfaces: true,
+		enums: true,
+		classes: true,
+		constants: true,
+	},
+	format: { includeMarkers: true },
+	imports: { enabled: true, maxDepth: 4, includeTypeOnly: true },
+	filtering: { onlyUsed: true, includeTransitive: true },
+	budget: { maxTokens: 1500, skipBarrelFiles: true },
+};
+
+const rootDir = path.join(import.meta.dir, "..");
+const fixturesDir = path.join(import.meta.dir, "fixtures");
+
+describe("TypeExtractor", () => {
+	test("extracts functions from simple file", () => {
+		const extractor = new TypeExtractor(rootDir, testConfig);
+		const types = extractor.extract(path.join(fixturesDir, "simple.ts"));
+
+		const functionNames = types
+			.filter((t) => t.kind === "function")
+			.map((t) => t.name);
+		expect(functionNames).toContain("greet");
+		expect(functionNames).toContain("add");
+	});
+
+	test("extracts types and interfaces", () => {
+		const extractor = new TypeExtractor(rootDir, testConfig);
+		const types = extractor.extract(path.join(fixturesDir, "with-types.ts"));
+
+		const typeNames = types
+			.filter((t) => t.kind === "type" || t.kind === "interface")
+			.map((t) => t.name);
+		expect(typeNames.length).toBeGreaterThan(0);
+	});
+
+	test("resolves imports up to maxDepth", () => {
+		const extractor = new TypeExtractor(rootDir, testConfig);
+		const types = extractor.extract(
+			path.join(fixturesDir, "depth-test/main.ts"),
+		);
+
+		const typeNames = types.map((t) => t.name);
+		expect(typeNames).toContain("User");
+		expect(typeNames).toContain("Role");
+		expect(typeNames).toContain("Permission");
+		expect(typeNames).toContain("AuditLog");
+	});
+
+	test("includes JSDoc comments", () => {
+		const extractor = new TypeExtractor(rootDir, testConfig);
+		const types = extractor.extract(path.join(fixturesDir, "simple.ts"));
+
+		const greet = types.find((t) => t.name === "greet");
+		expect(greet?.jsdoc).toBeDefined();
+		expect(greet?.jsdoc?.length).toBeGreaterThan(0);
+	});
+});
