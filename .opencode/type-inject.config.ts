@@ -30,7 +30,7 @@ export const defaultConfig: Config = {
 	},
 
 	budget: {
-		maxTokens: 1500,
+		maxTokens: 10000,
 		skipBarrelFiles: true,
 	},
 };
