@@ -5,6 +5,8 @@ export type FormatStats = {
 	estimatedTokens: number;
 };
 
+const isDev = !import.meta.url.includes("node_modules");
+
 export class ContentFormatter {
 	private config: Config;
 
@@ -65,10 +67,11 @@ export class ContentFormatter {
 	 * Create header marker with optional stats as attributes
 	 */
 	private createHeader(stats?: FormatStats): string {
+		const devAttr = isDev ? ' src="dev"' : "";
 		if (stats) {
-			return `<types count="${stats.totalTypes}" tokens="~${stats.estimatedTokens}">\n`;
+			return `<types count="${stats.totalTypes}" tokens="~${stats.estimatedTokens}"${devAttr}>\n`;
 		}
-		return "<types>\n";
+		return `<types${devAttr}>\n`;
 	}
 
 	/**
