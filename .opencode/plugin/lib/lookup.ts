@@ -356,18 +356,38 @@ export class TypeLookup {
 						extendsTypes.length > 0
 							? ` extends ${extendsTypes.map((e) => e.getText()).join(", ")}`
 							: "";
-					const properties = iface
-						.getProperties()
-						.map((prop) => {
-							const propName = prop.getName();
-							const propType = prop.getType().getText(prop);
-							const isOptional = prop.hasQuestionToken();
-							const readonly = prop.isReadonly() ? "readonly " : "";
-							return `  ${readonly}${propName}${isOptional ? "?" : ""}: ${propType};`;
-						})
-						.join("\n");
+					const properties = iface.getProperties().map((prop) => {
+						const propName = prop.getName();
+						const propType = prop.getType().getText(prop);
+						const isOptional = prop.hasQuestionToken();
+						const readonly = prop.isReadonly() ? "readonly " : "";
+						return `  ${readonly}${propName}${isOptional ? "?" : ""}: ${propType};`;
+					});
 
-					signature = `interface ${entry.name}${typeParamsText}${extendsText} {\n${properties}\n}`;
+					const methods = iface.getMethods().map((method) => {
+						const methodName = method.getName();
+						const methodTypeParams = method.getTypeParameters();
+						const methodTypeParamsText =
+							methodTypeParams.length > 0
+								? `<${methodTypeParams.map((tp) => tp.getText()).join(", ")}>`
+								: "";
+
+						const params = method
+							.getParameters()
+							.map((p) => {
+								const paramName = p.getName();
+								const paramType = p.getType().getText(p);
+								const isOptional = p.isOptional();
+								return `${paramName}${isOptional ? "?" : ""}: ${paramType}`;
+							})
+							.join(", ");
+
+						const returnType = method.getReturnType().getText(method);
+						return `  ${methodName}${methodTypeParamsText}(${params}): ${returnType};`;
+					});
+
+					const members = [...properties, ...methods].join("\n");
+					signature = `interface ${entry.name}${typeParamsText}${extendsText} {\n${members}\n}`;
 					const docs = iface.getJsDocs();
 					if (docs.length > 0) {
 						jsdoc = docs.map((d) => d.getDescription().trim()).join("\n");

@@ -244,19 +244,40 @@ export class TypeExtractor {
 					: "";
 
 			// Get properties
-			const properties = iface
-				.getProperties()
-				.map((prop) => {
-					const propName = prop.getName();
-					const propType = prop.getType().getText(prop);
-					const isOptional = prop.hasQuestionToken();
-					const readonly = prop.isReadonly() ? "readonly " : "";
+			const properties = iface.getProperties().map((prop) => {
+				const propName = prop.getName();
+				const propType = prop.getType().getText(prop);
+				const isOptional = prop.hasQuestionToken();
+				const readonly = prop.isReadonly() ? "readonly " : "";
 
-					return `  ${readonly}${propName}${isOptional ? "?" : ""}: ${propType};`;
-				})
-				.join("\n");
+				return `  ${readonly}${propName}${isOptional ? "?" : ""}: ${propType};`;
+			});
 
-			const signature = `interface ${name}${typeParamsText}${extendsText} {\n${properties}\n}`;
+			// Get methods
+			const methods = iface.getMethods().map((method) => {
+				const methodName = method.getName();
+				const typeParams = method.getTypeParameters();
+				const typeParamsText =
+					typeParams.length > 0
+						? `<${typeParams.map((tp) => tp.getText()).join(", ")}>`
+						: "";
+
+				const params = method
+					.getParameters()
+					.map((p) => {
+						const paramName = p.getName();
+						const paramType = p.getType().getText(p);
+						const isOptional = p.isOptional();
+						return `${paramName}${isOptional ? "?" : ""}: ${paramType}`;
+					})
+					.join(", ");
+
+				const returnType = method.getReturnType().getText(method);
+				return `  ${methodName}${typeParamsText}(${params}): ${returnType};`;
+			});
+
+			const members = [...properties, ...methods].join("\n");
+			const signature = `interface ${name}${typeParamsText}${extendsText} {\n${members}\n}`;
 
 			// Get JSDoc if enabled
 			let jsdoc: string[] | undefined;
