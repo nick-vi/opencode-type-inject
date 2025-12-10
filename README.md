@@ -36,12 +36,12 @@ The plugin also provides two tools:
 When reading a file:
 
 ```typescript
-<types count="3" tokens="~40">
-function getUser(id: string): User
+<types count="3" tokens="~85">
+function getUser(id: string): User  // [offset=2,limit=8]
 
 type User = { id: string; name: string; role: Role; }
 
-type Role = { name: string; permissions: Permission[]; }
+type Role = { name: string; permissions: Permission[]; }  // [filePath=./lib/role.ts]
 
 </types>
 
@@ -79,6 +79,44 @@ Only types actually used in the code are included. For partial file reads (with 
 ### Barrel File Detection
 
 Files that only contain `export * from` statements are skipped.
+
+## Understanding the Output
+
+### What Gets Shown
+
+| What | Shown As | Why |
+|------|----------|-----|
+| Functions | Signature only | Implementation can be long; signature tells you how to call it |
+| Classes | Public members only | Private details are internal; public API is what matters |
+| Types/Interfaces | Full definition | They ARE the definition - nothing hidden |
+| Arrow functions | Only if explicitly typed | `const fn: Type = ...` is intentional API; `const fn = () => {}` is often implementation detail |
+
+### Location Comments
+
+Since functions and classes only show signatures, we provide location hints so you can read the implementation when needed:
+
+```typescript
+function processUser(id: string): User  // [offset=15,limit=28]
+```
+
+The format matches the `read` tool parameters directly - no translation needed.
+
+### When filePath is Included
+
+```typescript
+// Direct import - you can see the import statement above
+type User = { ... }
+
+// Transitive import (2+ levels deep) - source not obvious
+type Permission = { ... }  // [filePath=./lib/permission.ts]
+```
+
+Direct imports are visible in the file's import statements. Transitive imports aren't - so we include where they live for navigation and refactoring.
+
+| Type | Local/Direct Import | Transitive Import (depth > 1) |
+|------|---------------------|-------------------------------|
+| function/class | `// [offset=X,limit=Y]` | `// [filePath=...,offset=X,limit=Y]` |
+| type/interface/enum | (none - full definition shown) | `// [filePath=...]` |
 
 ## Tools
 
