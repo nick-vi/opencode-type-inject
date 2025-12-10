@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import * as path from "node:path";
 import {
 	Project,
@@ -5,6 +6,11 @@ import {
 	SyntaxKind,
 	VariableDeclarationKind,
 } from "ts-morph";
+import {
+	type SvelteParser,
+	extractSvelteScripts,
+	loadSvelteParser,
+} from "./svelte-utils.ts";
 import type { Config, ExtractedTypeKind } from "./types.ts";
 
 type TypeIndexEntry = {
@@ -58,10 +64,15 @@ export class TypeLookup {
 	private project: Project;
 	private directory: string;
 	private config: Config;
+	private svelteParser: SvelteParser | null = null;
 
 	private index: Map<string, TypeIndexEntry[]> = new Map();
 	private indexed = false;
 	private indexedFiles: Set<string> = new Set();
+	// Track line offsets for Svelte files (filePath -> lineOffset)
+	private svelteLineOffsets: Map<string, number> = new Map();
+	// Map Svelte file paths to their virtual source files
+	private svelteSourceFiles: Map<string, SourceFile> = new Map();
 
 	constructor(directory: string, config: Config) {
 		this.directory = directory;
@@ -76,8 +87,15 @@ export class TypeLookup {
 			},
 		});
 
+		// Try to load svelte compiler (optional peer dependency)
+		this.svelteParser = loadSvelteParser();
+
 		if (this.config.debug) {
 			console.log("[TypeLookup] Initialized");
+			console.log(
+				"[TypeLookup] Svelte support:",
+				this.svelteParser ? "enabled" : "disabled",
+			);
 		}
 	}
 
@@ -154,10 +172,11 @@ export class TypeLookup {
 
 		if (this.config.debug) {
 			console.log(
-				`[TypeLookup] Building index from ${sourceFiles.length} files...`,
+				`[TypeLookup] Building index from ${sourceFiles.length} TS files...`,
 			);
 		}
 
+		// Index TypeScript files from project
 		for (const sf of sourceFiles) {
 			const filePath = sf.getFilePath();
 
@@ -168,6 +187,11 @@ export class TypeLookup {
 			this.indexFile(sf);
 		}
 
+		// Index Svelte files if parser is available
+		if (this.svelteParser) {
+			this.indexSvelteFiles();
+		}
+
 		this.indexed = true;
 
 		if (this.config.debug) {
@@ -176,6 +200,184 @@ export class TypeLookup {
 				`[TypeLookup] Index built: ${stats.totalTypes} types in ${stats.totalFiles} files (${Date.now() - startTime}ms)`,
 			);
 		}
+	}
+
+	/**
+	 * Find and index all Svelte files in the project directory
+	 */
+	private indexSvelteFiles(): void {
+		const svelteFiles = this.findSvelteFiles(this.directory);
+
+		if (this.config.debug) {
+			console.log(
+				`[TypeLookup] Found ${svelteFiles.length} Svelte files to index`,
+			);
+		}
+
+		for (const svelteFilePath of svelteFiles) {
+			try {
+				const scripts = extractSvelteScripts(
+					svelteFilePath,
+					this.project,
+					this.svelteParser,
+					this.config.debug,
+				);
+
+				for (const { sourceFile, lineOffset, isModule } of scripts) {
+					// Store line offset and source file for this Svelte file
+					this.svelteLineOffsets.set(svelteFilePath, lineOffset);
+					this.svelteSourceFiles.set(svelteFilePath, sourceFile);
+
+					// Index types from the virtual source file, but use the original .svelte path
+					this.indexSvelteFile(sourceFile, svelteFilePath, lineOffset);
+				}
+			} catch (error) {
+				if (this.config.debug) {
+					console.error(
+						`[TypeLookup] Error indexing Svelte file ${svelteFilePath}:`,
+						error,
+					);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Recursively find all .svelte files in a directory
+	 */
+	private findSvelteFiles(dir: string): string[] {
+		const results: string[] = [];
+
+		try {
+			const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+			for (const entry of entries) {
+				const fullPath = path.join(dir, entry.name);
+
+				// Skip node_modules and hidden directories
+				if (
+					entry.name === "node_modules" ||
+					entry.name.startsWith(".") ||
+					entry.name === "dist" ||
+					entry.name === "build"
+				) {
+					continue;
+				}
+
+				if (entry.isDirectory()) {
+					results.push(...this.findSvelteFiles(fullPath));
+				} else if (entry.isFile() && entry.name.endsWith(".svelte")) {
+					results.push(fullPath);
+				}
+			}
+		} catch {
+			// Directory not readable, skip
+		}
+
+		return results;
+	}
+
+	/**
+	 * Index a Svelte file's virtual source file with correct path and line offsets
+	 */
+	private indexSvelteFile(
+		sourceFile: SourceFile,
+		originalPath: string,
+		lineOffset: number,
+	): void {
+		for (const typeAlias of sourceFile.getTypeAliases()) {
+			this.addToIndex({
+				name: typeAlias.getName(),
+				kind: "type",
+				filePath: originalPath,
+				line: typeAlias.getStartLineNumber() + lineOffset,
+				lineEnd: typeAlias.getEndLineNumber() + lineOffset,
+				column: typeAlias.getStart() - typeAlias.getStartLinePos() + 1,
+				exported: typeAlias.isExported(),
+			});
+		}
+
+		for (const iface of sourceFile.getInterfaces()) {
+			this.addToIndex({
+				name: iface.getName(),
+				kind: "interface",
+				filePath: originalPath,
+				line: iface.getStartLineNumber() + lineOffset,
+				lineEnd: iface.getEndLineNumber() + lineOffset,
+				column: iface.getStart() - iface.getStartLinePos() + 1,
+				exported: iface.isExported(),
+			});
+		}
+
+		for (const cls of sourceFile.getClasses()) {
+			const name = cls.getName();
+			if (!name) continue;
+
+			this.addToIndex({
+				name,
+				kind: "class",
+				filePath: originalPath,
+				line: cls.getStartLineNumber() + lineOffset,
+				lineEnd: cls.getEndLineNumber() + lineOffset,
+				column: cls.getStart() - cls.getStartLinePos() + 1,
+				exported: cls.isExported(),
+			});
+		}
+
+		for (const enumDecl of sourceFile.getEnums()) {
+			this.addToIndex({
+				name: enumDecl.getName(),
+				kind: "enum",
+				filePath: originalPath,
+				line: enumDecl.getStartLineNumber() + lineOffset,
+				lineEnd: enumDecl.getEndLineNumber() + lineOffset,
+				column: enumDecl.getStart() - enumDecl.getStartLinePos() + 1,
+				exported: enumDecl.isExported(),
+			});
+		}
+
+		for (const func of sourceFile.getFunctions()) {
+			const name = func.getName();
+			if (!name) continue;
+
+			this.addToIndex({
+				name,
+				kind: "function",
+				filePath: originalPath,
+				line: func.getStartLineNumber() + lineOffset,
+				lineEnd: func.getEndLineNumber() + lineOffset,
+				column: func.getStart() - func.getStartLinePos() + 1,
+				exported: func.isExported(),
+			});
+		}
+
+		for (const varDecl of sourceFile.getVariableDeclarations()) {
+			const varStatement = varDecl.getVariableStatement();
+			if (!varStatement) continue;
+			if (varStatement.getDeclarationKind() !== VariableDeclarationKind.Const)
+				continue;
+
+			const initializer = varDecl.getInitializer();
+			if (!initializer) continue;
+
+			const hasAsConst = initializer.getType().getText().includes("readonly");
+			const text = initializer.getText();
+			const isFrozen = text.includes("Object.freeze");
+
+			if (!hasAsConst && !isFrozen) continue;
+
+			this.addToIndex({
+				name: varDecl.getName(),
+				kind: "const",
+				filePath: originalPath,
+				line: varDecl.getStartLineNumber() + lineOffset,
+				lineEnd: varDecl.getEndLineNumber() + lineOffset,
+				column: varDecl.getStart() - varDecl.getStartLinePos() + 1,
+				exported: varStatement.isExported(),
+			});
+		}
+
+		this.indexedFiles.add(originalPath);
 	}
 
 	private indexFile(sourceFile: SourceFile): void {
@@ -320,7 +522,10 @@ export class TypeLookup {
 		entry: TypeIndexEntry,
 		includeUsages: boolean,
 	): TypeMatch | null {
-		const sourceFile = this.project.getSourceFile(entry.filePath);
+		// For Svelte files, use the cached virtual source file
+		const sourceFile = entry.filePath.endsWith(".svelte")
+			? this.svelteSourceFiles.get(entry.filePath)
+			: this.project.getSourceFile(entry.filePath);
 		if (!sourceFile) return null;
 
 		const relativePath = path.relative(this.directory, entry.filePath);

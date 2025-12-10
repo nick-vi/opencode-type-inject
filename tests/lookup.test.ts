@@ -69,3 +69,64 @@ describe("TypeLookup", () => {
 		expect(stats.totalFiles).toBeGreaterThan(0);
 	});
 });
+
+describe("TypeLookup - Svelte files", () => {
+	test("finds types from Svelte files", () => {
+		const lookup = new TypeLookup(projectDir, testConfig);
+		const result = lookup.findType("CounterProps", { exact: true });
+
+		expect(result.found).toBe(true);
+		expect(result.types[0]?.name).toBe("CounterProps");
+		expect(result.types[0]?.filePath).toContain("Counter.svelte");
+	});
+
+	test("finds functions from Svelte files", () => {
+		const lookup = new TypeLookup(projectDir, testConfig);
+		const result = lookup.findType("increment", {
+			exact: true,
+			kind: ["function"],
+		});
+
+		expect(result.found).toBe(true);
+		expect(result.types[0]?.kind).toBe("function");
+		expect(result.types[0]?.filePath).toContain("Counter.svelte");
+	});
+
+	test("finds types from module script", () => {
+		const lookup = new TypeLookup(projectDir, testConfig);
+		const result = lookup.findType("Currency", { exact: true });
+
+		expect(result.found).toBe(true);
+		expect(result.types[0]?.name).toBe("Currency");
+		expect(result.types[0]?.filePath).toContain("ModuleScript.svelte");
+	});
+
+	test("applies correct line offset for Svelte types", () => {
+		const lookup = new TypeLookup(projectDir, testConfig);
+		const result = lookup.findType("CounterProps", { exact: true });
+
+		expect(result.found).toBe(true);
+		// CounterProps is at line 7 in Counter.svelte (1-based)
+		// The type definition starts after <script lang="ts"> on line 2
+		expect(result.types[0]?.line).toBeGreaterThan(1);
+	});
+
+	test("lists Svelte types in listTypeNames", () => {
+		const lookup = new TypeLookup(projectDir, testConfig);
+		const names = lookup.listTypeNames({ limit: 300 });
+
+		const svelteTypes = ["CounterProps", "Currency", "PriceConfig", "UserData"];
+		for (const typeName of svelteTypes) {
+			expect(names.some((n) => n.name === typeName)).toBe(true);
+		}
+	});
+
+	test("stats include Svelte files", () => {
+		const lookup = new TypeLookup(projectDir, testConfig);
+		lookup.findType("CounterProps"); // Trigger indexing
+		const stats = lookup.getStats();
+
+		// Should have indexed Svelte files
+		expect(stats.totalFiles).toBeGreaterThan(5);
+	});
+});

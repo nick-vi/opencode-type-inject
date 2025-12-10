@@ -129,9 +129,11 @@ Direct imports are visible in the file's import statements. Transitive imports a
 
 ## Tools
 
+Both tools support TypeScript and Svelte files.
+
 ### `lookup_type`
 
-Look up TypeScript type definitions by name.
+Look up type definitions by name (works with `.ts`, `.tsx`, and `.svelte` files).
 
 **Arguments:**
 - `name` (required): Type name to search for
@@ -144,13 +146,16 @@ Look up TypeScript type definitions by name.
 ```
 ## TypeName (kind)
 File: ./path/to/file.ts [offset=9,limit=50]
+
+## CounterProps (type)
+File: ./components/Counter.svelte [offset=6,limit=5]
 ```
 
 The `offset` and `limit` match the read tool parameters for easy navigation.
 
 ### `list_types`
 
-List all TypeScript type names in the project.
+List all type names in the project (includes both TypeScript and Svelte files).
 
 **Arguments:**
 - `kind` (optional): Filter by kind

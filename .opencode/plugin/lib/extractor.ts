@@ -1,4 +1,3 @@
-import * as fs from "node:fs";
 import * as path from "node:path";
 import {
 	Project,
@@ -6,13 +5,18 @@ import {
 	SyntaxKind,
 	VariableDeclarationKind,
 } from "ts-morph";
+import {
+	type SvelteParser,
+	extractSvelteScripts,
+	loadSvelteParser,
+} from "./svelte-utils.ts";
 import type { Config, ExtractedType } from "./types.ts";
 
 export class TypeExtractor {
 	private project: Project;
 	private config: Config;
 	private directory: string;
-	private svelteParser: typeof import("svelte/compiler").parse | null = null;
+	private svelteParser: SvelteParser | null = null;
 
 	constructor(directory: string, config: Config) {
 		this.config = config;
@@ -30,11 +34,7 @@ export class TypeExtractor {
 
 		// Try to load svelte compiler (optional peer dependency)
 		// Using require() for sync loading - cached for reuse across extract() calls
-		try {
-			this.svelteParser = require("svelte/compiler").parse;
-		} catch {
-			// svelte not installed - Svelte files will be skipped
-		}
+		this.svelteParser = loadSvelteParser();
 
 		if (this.config.debug) {
 			console.log("[TypeInject] TypeExtractor initialized");
@@ -72,7 +72,7 @@ export class TypeExtractor {
 			let primarySourceFile: SourceFile | undefined;
 
 			if (isSvelteFile) {
-				const svelteResults = this.extractSvelteScripts(filePath);
+				const svelteResults = this.getSvelteScripts(filePath);
 				if (svelteResults.length === 0) {
 					if (this.config.debug) {
 						console.log(
@@ -731,7 +731,7 @@ export class TypeExtractor {
 					}
 
 					// Extract from Svelte file
-					const svelteResults = this.extractSvelteScripts(svelteImportPath);
+					const svelteResults = this.getSvelteScripts(svelteImportPath);
 					for (const {
 						sourceFile: svelteSource,
 						lineOffset,
@@ -955,92 +955,20 @@ export class TypeExtractor {
 	}
 
 	/**
-	 * Extract TypeScript script content from a Svelte file using svelte/compiler
-	 * Returns both module and instance scripts if present
-	 * @param filePath Path to the Svelte file
-	 * @returns Array of script results with sourceFile and lineOffset
+	 * Extract TypeScript script content from a Svelte file
+	 * Delegates to shared utility
 	 */
-	private extractSvelteScripts(
-		filePath: string,
-	): Array<{ sourceFile: SourceFile; lineOffset: number; isModule: boolean }> {
-		// Use cached parser from constructor (svelte is optional dependency)
-		if (!this.svelteParser) {
-			if (this.config.debug) {
-				console.log(
-					"[TypeInject] svelte/compiler not available, skipping Svelte file",
-				);
-			}
-			return [];
-		}
-
-		const parse = this.svelteParser;
-
-		const content = fs.readFileSync(filePath, "utf-8");
-
-		// Parse the Svelte file with modern AST
-		const ast = parse(content, { modern: true, filename: filePath });
-
-		const results: Array<{
-			sourceFile: SourceFile;
-			lineOffset: number;
-			isModule: boolean;
-		}> = [];
-
-		// Process both module and instance scripts
-		const scripts: Array<{ script: typeof ast.instance; isModule: boolean }> =
-			[];
-		if (ast.module) scripts.push({ script: ast.module, isModule: true });
-		if (ast.instance) scripts.push({ script: ast.instance, isModule: false });
-
-		for (const { script, isModule } of scripts) {
-			if (!script) continue;
-
-			// Check if it's a TypeScript script by looking at attributes
-			const langAttr = script.attributes.find(
-				(attr: { name: string }) => attr.name === "lang",
-			);
-			const isTypeScript =
-				langAttr &&
-				"value" in langAttr &&
-				Array.isArray(langAttr.value) &&
-				langAttr.value[0] &&
-				"data" in langAttr.value[0] &&
-				(langAttr.value[0].data === "ts" ||
-					langAttr.value[0].data === "typescript");
-
-			if (!isTypeScript) {
-				if (this.config.debug) {
-					console.log(
-						`[TypeInject] Svelte ${isModule ? "module" : "instance"} script does not have lang='ts'`,
-					);
-				}
-				continue;
-			}
-
-			// Extract the script content using start/end positions
-			const scriptTag = content.slice(script.start, script.end);
-			const openTagEnd = scriptTag.indexOf(">") + 1;
-			const closeTagStart = scriptTag.lastIndexOf("</script>");
-			const scriptContent = scriptTag.slice(openTagEnd, closeTagStart);
-
-			// Calculate line offset: count newlines from file start to content start
-			const contentStartPos = script.start + openTagEnd;
-			const contentBeforeScript = content.slice(0, contentStartPos);
-			const lineOffset = contentBeforeScript.split("\n").length - 1;
-
-			// Create a virtual TypeScript file from the script content
-			const suffix = isModule ? ".module.svelte.ts" : ".svelte.ts";
-			const virtualPath = filePath.replace(".svelte", suffix);
-			const sourceFile = this.project.createSourceFile(
-				virtualPath,
-				scriptContent,
-				{ overwrite: true },
-			);
-
-			results.push({ sourceFile, lineOffset, isModule });
-		}
-
-		return results;
+	private getSvelteScripts(filePath: string): Array<{
+		sourceFile: SourceFile;
+		lineOffset: number;
+		isModule: boolean;
+	}> {
+		return extractSvelteScripts(
+			filePath,
+			this.project,
+			this.svelteParser,
+			this.config.debug,
+		);
 	}
 
 	private filterTypesForLineRange(
