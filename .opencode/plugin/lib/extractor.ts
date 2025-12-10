@@ -10,9 +10,11 @@ import type { Config, ExtractedType } from "./types.ts";
 export class TypeExtractor {
 	private project: Project;
 	private config: Config;
+	private directory: string;
 
 	constructor(directory: string, config: Config) {
 		this.config = config;
+		this.directory = directory;
 
 		const tsConfigPath = path.join(directory, "tsconfig.json");
 
@@ -51,6 +53,7 @@ export class TypeExtractor {
 
 			if (this.config.inject.functions) {
 				types.push(...this.extractFunctions(sourceFile));
+				types.push(...this.extractArrowFunctions(sourceFile));
 			}
 
 			if (this.config.inject.types) {
@@ -164,12 +167,18 @@ export class TypeExtractor {
 					.filter(Boolean);
 			}
 
+			// ts-morph uses 1-based line numbers, read tool uses 0-based offset
+			const lineStart = func.getStartLineNumber() - 1;
+			const lineEnd = func.getEndLineNumber() - 1;
+
 			extracted.push({
 				kind: "function",
 				name,
 				signature,
 				jsdoc,
 				exported,
+				lineStart,
+				lineEnd,
 			});
 		}
 
@@ -206,12 +215,17 @@ export class TypeExtractor {
 					.filter(Boolean);
 			}
 
+			const lineStart = typeAlias.getStartLineNumber() - 1;
+			const lineEnd = typeAlias.getEndLineNumber() - 1;
+
 			extracted.push({
 				kind: "type",
 				name,
 				signature,
 				jsdoc,
 				exported,
+				lineStart,
+				lineEnd,
 			});
 		}
 
@@ -288,12 +302,17 @@ export class TypeExtractor {
 					.filter(Boolean);
 			}
 
+			const lineStart = iface.getStartLineNumber() - 1;
+			const lineEnd = iface.getEndLineNumber() - 1;
+
 			extracted.push({
 				kind: "interface",
 				name,
 				signature,
 				jsdoc,
 				exported,
+				lineStart,
+				lineEnd,
 			});
 		}
 
@@ -339,12 +358,17 @@ export class TypeExtractor {
 					.filter(Boolean);
 			}
 
+			const lineStart = enumDecl.getStartLineNumber() - 1;
+			const lineEnd = enumDecl.getEndLineNumber() - 1;
+
 			extracted.push({
 				kind: "enum",
 				name,
 				signature,
 				jsdoc,
 				exported,
+				lineStart,
+				lineEnd,
 			});
 		}
 
@@ -436,12 +460,17 @@ export class TypeExtractor {
 					.filter(Boolean);
 			}
 
+			const lineStart = classDecl.getStartLineNumber() - 1;
+			const lineEnd = classDecl.getEndLineNumber() - 1;
+
 			extracted.push({
 				kind: "class",
 				name,
 				signature,
 				jsdoc,
 				exported,
+				lineStart,
+				lineEnd,
 			});
 		}
 
@@ -501,12 +530,78 @@ export class TypeExtractor {
 				}
 			}
 
+			const lineStart = variable.getStartLineNumber() - 1;
+			const lineEnd = variable.getEndLineNumber() - 1;
+
 			extracted.push({
 				kind: "const",
 				name,
 				signature,
 				jsdoc,
 				exported,
+				lineStart,
+				lineEnd,
+			});
+		}
+
+		return extracted;
+	}
+
+	/**
+	 * Extract explicitly typed arrow functions
+	 * Only includes arrow functions with explicit type annotations
+	 */
+	private extractArrowFunctions(sourceFile: SourceFile): ExtractedType[] {
+		const variables = sourceFile.getVariableDeclarations();
+		const extracted: ExtractedType[] = [];
+
+		for (const variable of variables) {
+			// Only extract const declarations
+			const varStatement = variable.getVariableStatement();
+			if (
+				!varStatement ||
+				varStatement.getDeclarationKind() !== VariableDeclarationKind.Const
+			)
+				continue;
+
+			const initializer = variable.getInitializer();
+			if (!initializer) continue;
+
+			// Check if it's an arrow function or function expression
+			const kind = initializer.getKind();
+			const isArrowFunc = kind === SyntaxKind.ArrowFunction;
+			const isFuncExpr = kind === SyntaxKind.FunctionExpression;
+			if (!isArrowFunc && !isFuncExpr) continue;
+
+			// Only include if it has an explicit type annotation
+			const typeNode = variable.getTypeNode();
+			if (!typeNode) continue;
+
+			const name = variable.getName();
+			const exported = varStatement.isExported();
+			const explicitType = typeNode.getText();
+			const signature = `const ${name}: ${explicitType}`;
+
+			// Get JSDoc if enabled
+			let jsdoc: string[] | undefined;
+			if (this.config.includeJSDoc) {
+				jsdoc = varStatement
+					.getJsDocs()
+					.map((doc) => doc.getDescription().trim())
+					.filter(Boolean);
+			}
+
+			const lineStart = variable.getStartLineNumber() - 1;
+			const lineEnd = variable.getEndLineNumber() - 1;
+
+			extracted.push({
+				kind: "function",
+				name,
+				signature,
+				jsdoc,
+				exported,
+				lineStart,
+				lineEnd,
 			});
 		}
 
@@ -567,9 +662,11 @@ export class TypeExtractor {
 					importedNames,
 				);
 
-				// Mark these as coming from an import
+				// Mark these as coming from an import with depth and resolved path
+				const relativePath = path.relative(this.directory, importPath);
 				for (const type of importedTypes) {
-					type.sourcePath = moduleSpecifier;
+					type.sourcePath = relativePath;
+					type.importDepth = depth + 1;
 					imported.push(type);
 				}
 
@@ -609,6 +706,10 @@ export class TypeExtractor {
 			const functions = this.extractFunctions(sourceFile);
 			types.push(
 				...functions.filter((t) => !filterByName || names.has(t.name)),
+			);
+			const arrowFunctions = this.extractArrowFunctions(sourceFile);
+			types.push(
+				...arrowFunctions.filter((t) => !filterByName || names.has(t.name)),
 			);
 		}
 

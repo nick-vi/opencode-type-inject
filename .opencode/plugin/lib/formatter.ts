@@ -103,6 +103,45 @@ export class ContentFormatter {
 		// Add the signature WITHOUT export keyword to save tokens
 		result += type.signature;
 
+		// Add location comment for function/class types (where we show signature, not full impl)
+		const locationComment = this.formatLocationComment(type);
+		if (locationComment) {
+			result += locationComment;
+		}
+
 		return result;
+	}
+
+	/**
+	 * Format location comment for types
+	 * - function/class: full location (offset/limit) to read implementation
+	 * - transitive types (depth > 1): just filePath for navigation/refactoring
+	 */
+	private formatLocationComment(type: ExtractedType): string | null {
+		const isFunctionOrClass = type.kind === "function" || type.kind === "class";
+		const isTransitive =
+			type.importDepth && type.importDepth > 1 && type.sourcePath;
+
+		// For function/class: show offset/limit to read implementation
+		if (isFunctionOrClass) {
+			if (type.lineStart === undefined || type.lineEnd === undefined) {
+				return null;
+			}
+
+			const limit = type.lineEnd - type.lineStart + 1;
+
+			if (isTransitive) {
+				return `  // [filePath=${type.sourcePath},offset=${type.lineStart},limit=${limit}]`;
+			}
+
+			return `  // [offset=${type.lineStart},limit=${limit}]`;
+		}
+
+		// For other transitive types: just show filePath for navigation
+		if (isTransitive) {
+			return `  // [filePath=${type.sourcePath}]`;
+		}
+
+		return null;
 	}
 }

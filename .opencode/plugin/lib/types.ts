@@ -20,6 +20,12 @@ export type ExtractedType = {
 	sourcePath?: string;
 	/** Whether this type is actually used in the file */
 	isUsed?: boolean;
+	/** 0-based start line number (matches read tool offset) */
+	lineStart?: number;
+	/** 0-based end line number */
+	lineEnd?: number;
+	/** Import depth: 0 = local, 1 = direct import, 2+ = transitive */
+	importDepth?: number;
 };
 
 export type Config = {

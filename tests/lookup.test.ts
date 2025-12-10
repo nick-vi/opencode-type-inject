@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import * as path from "node:path";
-import type { Config } from "../.opencode/plugin/lib/types";
 import { TypeLookup } from "../.opencode/plugin/lib/lookup";
+import type { Config } from "../.opencode/plugin/lib/types";
 
 const testConfig: Config = {
 	enabled: true,
