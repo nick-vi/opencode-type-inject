@@ -16,7 +16,7 @@ Add to your `opencode.json`:
 
 ### Automatic Type Injection (Read Hook)
 
-When an LLM reads a TypeScript file, this plugin automatically:
+When an LLM reads a TypeScript or Svelte file, this plugin automatically:
 
 1. Extracts type signatures (functions, types, interfaces, enums, classes, constants)
 2. Resolves imported types from other files (up to 4 levels deep)
@@ -79,6 +79,15 @@ Only types actually used in the code are included. For partial file reads (with 
 ### Barrel File Detection
 
 Files that only contain `export * from` statements are skipped.
+
+### Svelte Support
+
+Svelte files (`.svelte`) are fully supported:
+
+- Extracts types from both `<script lang="ts">` (instance) and `<script module lang="ts">` (module) blocks
+- Resolves imports between Svelte and TypeScript files in any direction (TS → Svelte, Svelte → TS)
+- Calculates correct line numbers for each script block
+- Requires `svelte` as an optional peer dependency (only loaded if installed)
 
 ## Understanding the Output
 
