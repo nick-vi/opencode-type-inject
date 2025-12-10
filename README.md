@@ -131,6 +131,14 @@ Look up TypeScript type definitions by name.
 - `includeUsages` (optional): Include files that import this type. Default: false
 - `limit` (optional): Maximum results. Default: 5
 
+**Output includes:**
+```
+## TypeName (kind)
+File: ./path/to/file.ts [offset=9,limit=50]
+```
+
+The `offset` and `limit` match the read tool parameters for easy navigation.
+
 ### `list_types`
 
 List all TypeScript type names in the project.
