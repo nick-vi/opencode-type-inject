@@ -289,6 +289,7 @@ function isTypeScriptFile(filePath: string): boolean {
 		filePath.endsWith(".ts") ||
 		filePath.endsWith(".tsx") ||
 		filePath.endsWith(".mts") ||
-		filePath.endsWith(".cts")
+		filePath.endsWith(".cts") ||
+		filePath.endsWith(".svelte")
 	);
 }

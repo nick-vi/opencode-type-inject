@@ -28,11 +28,18 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.8",
 		"@opencode-ai/plugin": "^1.0.134",
-		"@types/bun": "latest"
+		"@types/bun": "latest",
+		"svelte": "^5.45.8"
 	},
 	"peerDependencies": {
 		"typescript": "^5",
-		"@opencode-ai/plugin": ">=1.0.0"
+		"@opencode-ai/plugin": ">=1.0.0",
+		"svelte": "^5.0.0"
+	},
+	"peerDependenciesMeta": {
+		"svelte": {
+			"optional": true
+		}
 	},
 	"dependencies": {
 		"ts-morph": "^27.0.2"

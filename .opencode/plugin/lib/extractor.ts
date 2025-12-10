@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import * as path from "node:path";
 import {
 	Project,
@@ -11,6 +12,7 @@ export class TypeExtractor {
 	private project: Project;
 	private config: Config;
 	private directory: string;
+	private svelteParser: typeof import("svelte/compiler").parse | null = null;
 
 	constructor(directory: string, config: Config) {
 		this.config = config;
@@ -26,15 +28,27 @@ export class TypeExtractor {
 			},
 		});
 
+		// Try to load svelte compiler (optional peer dependency)
+		// Using require() for sync loading - cached for reuse across extract() calls
+		try {
+			this.svelteParser = require("svelte/compiler").parse;
+		} catch {
+			// svelte not installed - Svelte files will be skipped
+		}
+
 		if (this.config.debug) {
 			console.log("[TypeInject] TypeExtractor initialized");
 			console.log("[TypeInject] tsconfig.json:", tsConfigPath);
+			console.log(
+				"[TypeInject] Svelte support:",
+				this.svelteParser ? "enabled" : "disabled",
+			);
 		}
 	}
 
 	/**
-	 * Extract type signatures from a TypeScript file
-	 * @param filePath Path to the TypeScript file
+	 * Extract type signatures from a TypeScript or Svelte file
+	 * @param filePath Path to the TypeScript/Svelte file
 	 * @param lineRange Optional line range to filter types (for partial reads)
 	 */
 	extract(
@@ -48,55 +62,82 @@ export class TypeExtractor {
 		}
 
 		try {
-			const sourceFile = this.project.addSourceFileAtPath(filePath);
+			// Handle Svelte files by extracting script content (may have multiple scripts)
+			const isSvelteFile = filePath.endsWith(".svelte");
 			const types: ExtractedType[] = [];
+			const processedFiles = new Set<string>();
+			processedFiles.add(filePath);
 
-			if (this.config.inject.functions) {
-				types.push(...this.extractFunctions(sourceFile));
-				types.push(...this.extractArrowFunctions(sourceFile));
+			// Track primary source file for filtering (instance script for Svelte, or the TS file)
+			let primarySourceFile: SourceFile | undefined;
+
+			if (isSvelteFile) {
+				const svelteResults = this.extractSvelteScripts(filePath);
+				if (svelteResults.length === 0) {
+					if (this.config.debug) {
+						console.log(
+							`[TypeInject] No TypeScript script found in Svelte file`,
+						);
+					}
+					return [];
+				}
+
+				// Extract from all scripts (module and instance)
+				for (const { sourceFile, lineOffset, isModule } of svelteResults) {
+					const scriptTypes = this.extractTypesFromSourceFile(sourceFile);
+
+					// Apply lineOffset to local types
+					for (const type of scriptTypes) {
+						if (type.lineStart !== undefined) {
+							type.lineStart += lineOffset;
+						}
+						if (type.lineEnd !== undefined) {
+							type.lineEnd += lineOffset;
+						}
+					}
+
+					types.push(...scriptTypes);
+
+					// Resolve imports from this script
+					if (this.config.imports.enabled) {
+						const importedTypes = this.resolveImports(
+							sourceFile,
+							0,
+							processedFiles,
+						);
+						types.push(...importedTypes);
+					}
+
+					// Use instance script as primary, fallback to module
+					if (!isModule || !primarySourceFile) {
+						primarySourceFile = sourceFile;
+					}
+				}
+			} else {
+				primarySourceFile = this.project.addSourceFileAtPath(filePath);
+				types.push(...this.extractTypesFromSourceFile(primarySourceFile));
+
+				if (this.config.imports.enabled) {
+					const importedTypes = this.resolveImports(
+						primarySourceFile,
+						0,
+						processedFiles,
+					);
+					types.push(...importedTypes);
+				}
 			}
 
-			if (this.config.inject.types) {
-				types.push(...this.extractTypeAliases(sourceFile));
-			}
-
-			if (this.config.inject.interfaces) {
-				types.push(...this.extractInterfaces(sourceFile));
-			}
-
-			if (this.config.inject.enums) {
-				types.push(...this.extractEnums(sourceFile));
-			}
-
-			if (this.config.inject.classes) {
-				types.push(...this.extractClasses(sourceFile));
-			}
-
-			if (this.config.inject.constants) {
-				types.push(...this.extractConstants(sourceFile));
-			}
-
-			if (this.config.imports.enabled) {
-				const processedFiles = new Set<string>();
-				processedFiles.add(filePath);
-				const importedTypes = this.resolveImports(
-					sourceFile,
-					0,
-					processedFiles,
-				);
-				types.push(...importedTypes);
-			}
-
+			// Apply filtering if enabled
 			let finalTypes = types;
-			if (this.config.filtering.onlyUsed) {
+			if (this.config.filtering.onlyUsed && primarySourceFile) {
 				if (lineRange) {
 					finalTypes = this.filterTypesForLineRange(
-						sourceFile,
+						primarySourceFile,
 						types,
 						lineRange,
 					);
 				} else {
-					finalTypes = this.filterUsedTypes(sourceFile, types);
+					finalTypes = this.filterUsedTypes(primarySourceFile, types);
 				}
 			}
 
@@ -118,6 +159,40 @@ export class TypeExtractor {
 			}
 			return [];
 		}
+	}
+
+	/**
+	 * Extract all types from a source file (without import resolution)
+	 */
+	private extractTypesFromSourceFile(sourceFile: SourceFile): ExtractedType[] {
+		const types: ExtractedType[] = [];
+
+		if (this.config.inject.functions) {
+			types.push(...this.extractFunctions(sourceFile));
+			types.push(...this.extractArrowFunctions(sourceFile));
+		}
+
+		if (this.config.inject.types) {
+			types.push(...this.extractTypeAliases(sourceFile));
+		}
+
+		if (this.config.inject.interfaces) {
+			types.push(...this.extractInterfaces(sourceFile));
+		}
+
+		if (this.config.inject.enums) {
+			types.push(...this.extractEnums(sourceFile));
+		}
+
+		if (this.config.inject.classes) {
+			types.push(...this.extractClasses(sourceFile));
+		}
+
+		if (this.config.inject.constants) {
+			types.push(...this.extractConstants(sourceFile));
+		}
+
+		return types;
 	}
 
 	/**
@@ -636,6 +711,58 @@ export class TypeExtractor {
 			try {
 				// Resolve the module path
 				const moduleSourceFile = importDecl.getModuleSpecifierSourceFile();
+
+				// Extract named imports to know which types to get
+				const namedImports = importDecl.getNamedImports();
+				const importedNames = new Set(namedImports.map((ni) => ni.getName()));
+
+				// Handle .svelte imports manually (ts-morph can't resolve them)
+				if (!moduleSourceFile && moduleSpecifier.endsWith(".svelte")) {
+					const currentDir = path.dirname(sourceFile.getFilePath());
+					const svelteImportPath = path.resolve(currentDir, moduleSpecifier);
+
+					if (processedFiles.has(svelteImportPath)) continue;
+					processedFiles.add(svelteImportPath);
+
+					if (this.config.debug) {
+						console.log(
+							`[TypeInject] Resolving Svelte import: ${moduleSpecifier} -> ${svelteImportPath}`,
+						);
+					}
+
+					// Extract from Svelte file
+					const svelteResults = this.extractSvelteScripts(svelteImportPath);
+					for (const {
+						sourceFile: svelteSource,
+						lineOffset,
+					} of svelteResults) {
+						const svelteTypes = this.extractTypesFromFile(
+							svelteSource,
+							importedNames,
+						);
+
+						const relativePath = `./${path.relative(this.directory, svelteImportPath)}`;
+						for (const type of svelteTypes) {
+							if (type.lineStart !== undefined) type.lineStart += lineOffset;
+							if (type.lineEnd !== undefined) type.lineEnd += lineOffset;
+							type.sourcePath = relativePath;
+							type.importDepth = depth + 1;
+							imported.push(type);
+						}
+
+						// Recursively resolve imports from this Svelte file
+						if (depth + 1 < this.config.imports.maxDepth) {
+							const nestedImports = this.resolveImports(
+								svelteSource,
+								depth + 1,
+								processedFiles,
+							);
+							imported.push(...nestedImports);
+						}
+					}
+					continue;
+				}
+
 				if (!moduleSourceFile) continue;
 
 				const importPath = moduleSourceFile.getFilePath();
@@ -651,10 +778,6 @@ export class TypeExtractor {
 						`[TypeInject] Resolving import: ${moduleSpecifier} -> ${importPath}`,
 					);
 				}
-
-				// Extract named imports to know which types to get
-				const namedImports = importDecl.getNamedImports();
-				const importedNames = new Set(namedImports.map((ni) => ni.getName()));
 
 				// Extract types from the imported file
 				const importedTypes = this.extractTypesFromFile(
@@ -829,6 +952,95 @@ export class TypeExtractor {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Extract TypeScript script content from a Svelte file using svelte/compiler
+	 * Returns both module and instance scripts if present
+	 * @param filePath Path to the Svelte file
+	 * @returns Array of script results with sourceFile and lineOffset
+	 */
+	private extractSvelteScripts(
+		filePath: string,
+	): Array<{ sourceFile: SourceFile; lineOffset: number; isModule: boolean }> {
+		// Use cached parser from constructor (svelte is optional dependency)
+		if (!this.svelteParser) {
+			if (this.config.debug) {
+				console.log(
+					"[TypeInject] svelte/compiler not available, skipping Svelte file",
+				);
+			}
+			return [];
+		}
+
+		const parse = this.svelteParser;
+
+		const content = fs.readFileSync(filePath, "utf-8");
+
+		// Parse the Svelte file with modern AST
+		const ast = parse(content, { modern: true, filename: filePath });
+
+		const results: Array<{
+			sourceFile: SourceFile;
+			lineOffset: number;
+			isModule: boolean;
+		}> = [];
+
+		// Process both module and instance scripts
+		const scripts: Array<{ script: typeof ast.instance; isModule: boolean }> =
+			[];
+		if (ast.module) scripts.push({ script: ast.module, isModule: true });
+		if (ast.instance) scripts.push({ script: ast.instance, isModule: false });
+
+		for (const { script, isModule } of scripts) {
+			if (!script) continue;
+
+			// Check if it's a TypeScript script by looking at attributes
+			const langAttr = script.attributes.find(
+				(attr: { name: string }) => attr.name === "lang",
+			);
+			const isTypeScript =
+				langAttr &&
+				"value" in langAttr &&
+				Array.isArray(langAttr.value) &&
+				langAttr.value[0] &&
+				"data" in langAttr.value[0] &&
+				(langAttr.value[0].data === "ts" ||
+					langAttr.value[0].data === "typescript");
+
+			if (!isTypeScript) {
+				if (this.config.debug) {
+					console.log(
+						`[TypeInject] Svelte ${isModule ? "module" : "instance"} script does not have lang='ts'`,
+					);
+				}
+				continue;
+			}
+
+			// Extract the script content using start/end positions
+			const scriptTag = content.slice(script.start, script.end);
+			const openTagEnd = scriptTag.indexOf(">") + 1;
+			const closeTagStart = scriptTag.lastIndexOf("</script>");
+			const scriptContent = scriptTag.slice(openTagEnd, closeTagStart);
+
+			// Calculate line offset: count newlines from file start to content start
+			const contentStartPos = script.start + openTagEnd;
+			const contentBeforeScript = content.slice(0, contentStartPos);
+			const lineOffset = contentBeforeScript.split("\n").length - 1;
+
+			// Create a virtual TypeScript file from the script content
+			const suffix = isModule ? ".module.svelte.ts" : ".svelte.ts";
+			const virtualPath = filePath.replace(".svelte", suffix);
+			const sourceFile = this.project.createSourceFile(
+				virtualPath,
+				scriptContent,
+				{ overwrite: true },
+			);
+
+			results.push({ sourceFile, lineOffset, isModule });
+		}
+
+		return results;
 	}
 
 	private filterTypesForLineRange(
