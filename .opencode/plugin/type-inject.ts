@@ -92,7 +92,12 @@ export const TypeInjectPlugin: Plugin = async ({ directory }) => {
 
 					for (const type of result.types) {
 						lines.push(`## ${type.name} (${type.kind})`);
-						lines.push(`File: ${type.relativePath}:${type.line}`);
+						// Convert 1-based line to 0-based offset for read tool compatibility
+						const offset = type.line - 1;
+						const limit = type.lineEnd - type.line + 1;
+						lines.push(
+							`File: ${type.relativePath} [offset=${offset},limit=${limit}]`,
+						);
 						if (type.exported) lines.push("Exported: yes");
 						if (type.jsdoc) lines.push(`JSDoc: ${type.jsdoc}`);
 						if (type.generics?.length) {

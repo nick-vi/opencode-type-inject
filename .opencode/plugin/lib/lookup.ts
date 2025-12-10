@@ -12,6 +12,7 @@ type TypeIndexEntry = {
 	kind: ExtractedTypeKind;
 	filePath: string;
 	line: number;
+	lineEnd: number;
 	column: number;
 	exported: boolean;
 };
@@ -23,6 +24,7 @@ export type TypeMatch = {
 	filePath: string;
 	relativePath: string;
 	line: number;
+	lineEnd: number;
 	column: number;
 	exported: boolean;
 	jsdoc?: string;
@@ -185,6 +187,7 @@ export class TypeLookup {
 				kind: "type",
 				filePath,
 				line: typeAlias.getStartLineNumber(),
+				lineEnd: typeAlias.getEndLineNumber(),
 				column: typeAlias.getStart() - typeAlias.getStartLinePos() + 1,
 				exported: typeAlias.isExported(),
 			});
@@ -196,6 +199,7 @@ export class TypeLookup {
 				kind: "interface",
 				filePath,
 				line: iface.getStartLineNumber(),
+				lineEnd: iface.getEndLineNumber(),
 				column: iface.getStart() - iface.getStartLinePos() + 1,
 				exported: iface.isExported(),
 			});
@@ -210,6 +214,7 @@ export class TypeLookup {
 				kind: "class",
 				filePath,
 				line: cls.getStartLineNumber(),
+				lineEnd: cls.getEndLineNumber(),
 				column: cls.getStart() - cls.getStartLinePos() + 1,
 				exported: cls.isExported(),
 			});
@@ -221,6 +226,7 @@ export class TypeLookup {
 				kind: "enum",
 				filePath,
 				line: enumDecl.getStartLineNumber(),
+				lineEnd: enumDecl.getEndLineNumber(),
 				column: enumDecl.getStart() - enumDecl.getStartLinePos() + 1,
 				exported: enumDecl.isExported(),
 			});
@@ -235,6 +241,7 @@ export class TypeLookup {
 				kind: "function",
 				filePath,
 				line: func.getStartLineNumber(),
+				lineEnd: func.getEndLineNumber(),
 				column: func.getStart() - func.getStartLinePos() + 1,
 				exported: func.isExported(),
 			});
@@ -260,6 +267,7 @@ export class TypeLookup {
 				kind: "const",
 				filePath,
 				line: varDecl.getStartLineNumber(),
+				lineEnd: varDecl.getEndLineNumber(),
 				column: varDecl.getStart() - varDecl.getStartLinePos() + 1,
 				exported: varStatement.isExported(),
 			});
@@ -561,6 +569,7 @@ export class TypeLookup {
 			filePath: entry.filePath,
 			relativePath,
 			line: entry.line,
+			lineEnd: entry.lineEnd,
 			column: entry.column,
 			exported: entry.exported,
 		};
