@@ -141,6 +141,6 @@ describe("TypeExtractor", () => {
 		);
 
 		const user = types.find((t) => t.name === "User");
-		expect(user?.sourcePath).toContain("tests/fixtures/depth-test/user.ts");
+		expect(user?.sourcePath).toBe("./tests/fixtures/depth-test/user.ts");
 	});
 });

@@ -663,7 +663,7 @@ export class TypeExtractor {
 				);
 
 				// Mark these as coming from an import with depth and resolved path
-				const relativePath = path.relative(this.directory, importPath);
+				const relativePath = `./${path.relative(this.directory, importPath)}`;
 				for (const type of importedTypes) {
 					type.sourcePath = relativePath;
 					type.importDepth = depth + 1;
