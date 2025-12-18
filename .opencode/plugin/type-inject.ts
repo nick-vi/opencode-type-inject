@@ -1,3 +1,5 @@
+import { existsSync } from "fs";
+import path from "path";
 import { type Plugin, tool } from "@opencode-ai/plugin";
 import { defaultConfig } from "../type-inject.config.ts";
 import { TypeExtractor } from "./lib/extractor.ts";
@@ -16,6 +18,17 @@ export const TypeInjectPlugin: Plugin = async ({ directory }) => {
 	}
 
 	if (!config.enabled) {
+		return {};
+	}
+
+	// Skip for projects without tsconfig.json (non-TypeScript projects)
+	const tsConfigPath = path.join(directory, "tsconfig.json");
+	if (!existsSync(tsConfigPath)) {
+		if (config.debug) {
+			console.log(
+				`[TypeInject] Skipping - no tsconfig.json found at: ${tsConfigPath}`,
+			);
+		}
 		return {};
 	}
 
