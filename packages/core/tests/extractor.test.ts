@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import * as path from "node:path";
-import { TypeExtractor } from "../.opencode/plugin/lib/extractor";
-import type { Config } from "../.opencode/plugin/lib/types";
+import { TypeExtractor, type Config } from "../lib/index.ts";
 
 const testConfig: Config = {
 	enabled: true,

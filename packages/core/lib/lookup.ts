@@ -79,13 +79,29 @@ export class TypeLookup {
 		this.config = config;
 
 		const tsConfigPath = path.join(directory, "tsconfig.json");
-		this.project = new Project({
-			tsConfigFilePath: tsConfigPath,
-			skipAddingFilesFromTsConfig: false,
-			compilerOptions: {
-				allowJs: true,
-			},
-		});
+
+		try {
+			this.project = new Project({
+				tsConfigFilePath: tsConfigPath,
+				skipAddingFilesFromTsConfig: false,
+				compilerOptions: {
+					allowJs: true,
+				},
+			});
+		} catch {
+			// If tsconfig fails to load, create project without it
+			if (this.config.debug) {
+				console.log(
+					"[TypeLookup] Failed to load tsconfig.json, using default compiler options",
+				);
+			}
+			this.project = new Project({
+				skipAddingFilesFromTsConfig: true,
+				compilerOptions: {
+					allowJs: true,
+				},
+			});
+		}
 
 		// Try to load svelte compiler (optional peer dependency)
 		this.svelteParser = loadSvelteParser();

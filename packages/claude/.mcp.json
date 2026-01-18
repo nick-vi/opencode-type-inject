@@ -1,0 +1,9 @@
+{
+	"mcpServers": {
+		"type-inject": {
+			"type": "stdio",
+			"command": "bun",
+			"args": ["run", "${CLAUDE_PLUGIN_ROOT}/mcp-server/index.ts"]
+		}
+	}
+}

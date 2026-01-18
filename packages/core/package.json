@@ -1,0 +1,39 @@
+{
+	"name": "@nick-vi/type-inject-core",
+	"version": "0.1.0",
+	"description": "Core library for TypeScript type extraction and injection",
+	"type": "module",
+	"main": "./lib/index.ts",
+	"exports": {
+		".": "./lib/index.ts",
+		"./extractor": "./lib/extractor.ts",
+		"./lookup": "./lib/lookup.ts",
+		"./prioritizer": "./lib/prioritizer.ts",
+		"./formatter": "./lib/formatter.ts",
+		"./types": "./lib/types.ts"
+	},
+	"files": ["lib"],
+	"scripts": {
+		"test": "bun test ./tests/*.test.ts",
+		"typecheck": "tsc --noEmit"
+	},
+	"peerDependencies": {
+		"typescript": "^5",
+		"svelte": "^5.0.0"
+	},
+	"peerDependenciesMeta": {
+		"svelte": {
+			"optional": true
+		}
+	},
+	"dependencies": {
+		"ts-morph": "^27.0.2"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"svelte": "^5.45.8"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

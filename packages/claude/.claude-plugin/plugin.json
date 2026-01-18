@@ -1,0 +1,8 @@
+{
+	"name": "claude-type-inject",
+	"description": "Injects TypeScript type context when reading files",
+	"version": "0.1.0",
+	"author": {
+		"name": "nick-vi"
+	}
+}

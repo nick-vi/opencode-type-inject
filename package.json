@@ -1,53 +1,13 @@
 {
-	"name": "@nick-vi/opencode-type-inject",
-	"version": "0.1.0",
-	"description": "OpenCode plugin that auto-injects TypeScript types into file reads and provides type lookup tools",
-	"keywords": [
-		"opencode",
-		"plugin",
-		"typescript",
-		"types",
-		"llm"
-	],
-	"type": "module",
-	"main": "./.opencode/plugin/type-inject.ts",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/nick-vi/opencode-type-inject.git"
-	},
-	"homepage": "https://github.com/nick-vi/opencode-type-inject#readme",
-	"bugs": {
-		"url": "https://github.com/nick-vi/opencode-type-inject/issues"
-	},
-	"license": "MIT",
-	"author": "nick-vi",
+	"name": "type-inject",
+	"private": true,
+	"workspaces": ["packages/*"],
 	"scripts": {
-		"test": "bun test ./tests/*.test.ts",
-		"typecheck": "tsc --noEmit"
+		"test": "bun --filter '*' test",
+		"typecheck": "bun --filter '*' typecheck",
+		"lint": "bunx biome check ."
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.3.8",
-		"@opencode-ai/plugin": "^1.0.134",
-		"@types/bun": "latest",
-		"svelte": "^5.45.8"
-	},
-	"peerDependencies": {
-		"typescript": "^5",
-		"@opencode-ai/plugin": ">=1.0.0",
-		"svelte": "^5.0.0"
-	},
-	"peerDependenciesMeta": {
-		"svelte": {
-			"optional": true
-		}
-	},
-	"dependencies": {
-		"ts-morph": "^27.0.2"
-	},
-	"files": [
-		".opencode/"
-	],
-	"publishConfig": {
-		"access": "public"
+		"@biomejs/biome": "^2.3.8"
 	}
 }

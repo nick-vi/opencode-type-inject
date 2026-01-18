@@ -24,13 +24,28 @@ export class TypeExtractor {
 
 		const tsConfigPath = path.join(directory, "tsconfig.json");
 
-		this.project = new Project({
-			tsConfigFilePath: tsConfigPath,
-			skipAddingFilesFromTsConfig: true,
-			compilerOptions: {
-				allowJs: true,
-			},
-		});
+		try {
+			this.project = new Project({
+				tsConfigFilePath: tsConfigPath,
+				skipAddingFilesFromTsConfig: true,
+				compilerOptions: {
+					allowJs: true,
+				},
+			});
+		} catch {
+			// If tsconfig fails to load, create project without it
+			if (this.config.debug) {
+				console.log(
+					"[TypeInject] Failed to load tsconfig.json, using default compiler options",
+				);
+			}
+			this.project = new Project({
+				skipAddingFilesFromTsConfig: true,
+				compilerOptions: {
+					allowJs: true,
+				},
+			});
+		}
 
 		// Try to load svelte compiler (optional peer dependency)
 		// Using require() for sync loading - cached for reuse across extract() calls

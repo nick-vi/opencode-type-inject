@@ -1,5 +1,5 @@
 /**
- * Type definitions for the OpenCode Type Injection Plugin
+ * Type definitions for the Type Injection Core Library
  */
 
 export type ExtractedTypeKind =

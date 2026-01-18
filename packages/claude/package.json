@@ -1,0 +1,31 @@
+{
+	"name": "@nick-vi/claude-type-inject",
+	"version": "0.1.0",
+	"description": "Claude Code plugin for TypeScript type injection",
+	"type": "module",
+	"files": [".claude-plugin/", "mcp-server/", "hooks/", ".mcp.json"],
+	"scripts": {
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.0.0",
+		"@nick-vi/type-inject-core": "workspace:*",
+		"zod": "^4.3.5"
+	},
+	"peerDependencies": {
+		"typescript": "^5",
+		"svelte": "^5.0.0"
+	},
+	"peerDependenciesMeta": {
+		"svelte": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"svelte": "^5.45.8"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

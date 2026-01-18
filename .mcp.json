@@ -1,0 +1,9 @@
+{
+	"mcpServers": {
+		"type-inject": {
+			"type": "stdio",
+			"command": "bun",
+			"args": ["run", "./packages/claude/mcp-server/index.ts"]
+		}
+	}
+}

@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test";
 import {
 	isBarrelFile,
 	prioritizeTypes,
-} from "../.opencode/plugin/lib/prioritizer";
-import type { ExtractedType } from "../.opencode/plugin/lib/types";
+	type ExtractedType,
+} from "../lib/index.ts";
 
 describe("prioritizeTypes", () => {
 	test("always includes functions (tier 1)", () => {

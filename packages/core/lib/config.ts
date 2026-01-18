@@ -1,4 +1,4 @@
-import type { Config } from "./plugin/lib/types.ts";
+import type { Config } from "./types.ts";
 
 export const defaultConfig: Config = {
 	enabled: true,
@@ -34,5 +34,3 @@ export const defaultConfig: Config = {
 		skipBarrelFiles: true,
 	},
 };
-
-export default defaultConfig;

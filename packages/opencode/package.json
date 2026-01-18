@@ -1,0 +1,32 @@
+{
+	"name": "@nick-vi/opencode-type-inject",
+	"version": "0.1.0",
+	"description": "OpenCode plugin that auto-injects TypeScript types into file reads",
+	"type": "module",
+	"main": "./.opencode/plugin/type-inject.ts",
+	"files": [".opencode/"],
+	"scripts": {
+		"typecheck": "tsc --noEmit"
+	},
+	"peerDependencies": {
+		"typescript": "^5",
+		"@opencode-ai/plugin": ">=1.0.0",
+		"svelte": "^5.0.0"
+	},
+	"peerDependenciesMeta": {
+		"svelte": {
+			"optional": true
+		}
+	},
+	"dependencies": {
+		"@nick-vi/type-inject-core": "workspace:*"
+	},
+	"devDependencies": {
+		"@opencode-ai/plugin": "^1.0.134",
+		"@types/bun": "latest",
+		"svelte": "^5.45.8"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

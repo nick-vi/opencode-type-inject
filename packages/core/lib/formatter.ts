@@ -113,6 +113,33 @@ export class ContentFormatter {
 	}
 
 	/**
+	 * Format types only (without prepending to content)
+	 * Useful for hooks that inject types as additional context
+	 */
+	formatTypesOnly(types: ExtractedType[], stats?: FormatStats): string {
+		if (types.length === 0) {
+			return "";
+		}
+
+		let result = "";
+
+		if (this.config.format.includeMarkers) {
+			result += this.createHeader(stats);
+		}
+
+		for (const type of types) {
+			result += this.formatType(type);
+			result += "\n\n";
+		}
+
+		if (this.config.format.includeMarkers) {
+			result += this.createSeparator();
+		}
+
+		return result.trim();
+	}
+
+	/**
 	 * Format location comment for types
 	 * - function/class: full location (offset/limit) to read implementation
 	 * - transitive types (depth > 1): just filePath for navigation/refactoring

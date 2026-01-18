@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { ContentFormatter } from "../.opencode/plugin/lib/formatter";
-import type { Config, ExtractedType } from "../.opencode/plugin/lib/types";
+import { ContentFormatter, type Config, type ExtractedType } from "../lib/index.ts";
 
 const testConfig: Config = {
 	enabled: true,
