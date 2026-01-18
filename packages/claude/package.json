@@ -3,6 +3,9 @@
 	"version": "0.1.0",
 	"description": "Claude Code plugin for TypeScript type injection",
 	"type": "module",
+	"bin": {
+		"claude-type-inject": "./mcp-server/index.ts"
+	},
 	"files": [".claude-plugin/", "mcp-server/", "hooks/", ".mcp.json"],
 	"scripts": {
 		"typecheck": "tsc --noEmit"

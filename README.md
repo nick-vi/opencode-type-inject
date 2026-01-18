@@ -1,8 +1,40 @@
-# opencode-type-inject
+# type-inject
 
-OpenCode plugin that auto-injects TypeScript types into file reads and provides type lookup tools.
+TypeScript type injection plugin for AI coding assistants. Auto-injects type signatures into file reads and provides type lookup tools.
+
+Supports both **Claude Code** and **OpenCode**.
 
 ## Installation
+
+### Claude Code
+
+```bash
+claude mcp add type-inject -- npx @nick-vi/claude-type-inject
+```
+
+This adds the MCP server with `lookup_type` and `list_types` tools.
+
+For automatic type injection on file reads, add to your project's `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx @nick-vi/claude-type-inject/hooks/post-read.ts"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### OpenCode
 
 Add to your `opencode.json`:
 
@@ -22,18 +54,20 @@ When an LLM reads a TypeScript or Svelte file, this plugin automatically:
 2. Resolves imported types from other files (up to 4 levels deep)
 3. Applies smart filtering (only types actually used in the code)
 4. Enforces a token budget with priority-based ordering
-5. Prepends the signatures to the file content
+5. Injects the signatures as additional context
 
-### Custom Tools
+For partial file reads (with offset/limit), only types relevant to that section are injected.
 
-The plugin also provides two tools:
+### MCP Tools
+
+The plugin provides two tools:
 
 - **`lookup_type`** - Look up any type by name without reading files
 - **`list_types`** - List all types in the project
 
 ## Example Output
 
-When reading a file:
+When reading a file, the LLM receives additional context:
 
 ```typescript
 <types count="3" tokens="~85">
@@ -44,14 +78,6 @@ type User = { id: string; name: string; role: Role; }
 type Role = { name: string; permissions: Permission[]; }  // [filePath=./lib/role.ts]
 
 </types>
-
-<file>
-00001| import { User } from "./user";
-00002| 
-00003| export function getUser(id: string): User {
-00004|   return { id, name: "test", role: { name: "admin", permissions: [] } };
-00005| }
-</file>
 ```
 
 ## Key Features
@@ -160,6 +186,16 @@ List all type names in the project (includes both TypeScript and Svelte files).
 **Arguments:**
 - `kind` (optional): Filter by kind
 - `limit` (optional): Maximum results. Default: 100
+
+## Packages
+
+This is a monorepo with three packages:
+
+| Package | Description |
+|---------|-------------|
+| `@nick-vi/type-inject-core` | Shared TypeScript extraction library |
+| `@nick-vi/claude-type-inject` | Claude Code plugin (MCP server + hooks) |
+| `@nick-vi/opencode-type-inject` | OpenCode plugin |
 
 ## License
 
