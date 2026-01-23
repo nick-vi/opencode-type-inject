@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
 
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -20,20 +22,25 @@ jobs:
     environment: npm-release
     permissions:
       contents: write
-      issues: write
       pull-requests: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
       - uses: oven-sh/setup-bun@v2
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
       - run: bun install
-      - run: npx semantic-release
+
+      - name: Create Release PR or Publish
+        uses: changesets/action@v1
+        with:
+          version: bun run version
+          publish: bun run release
+          commit: "chore: version packages"
+          title: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

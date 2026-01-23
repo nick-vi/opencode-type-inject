@@ -8,13 +8,19 @@ Supports both **Claude Code** and **OpenCode**.
 
 ### Claude Code
 
+**1. Add the MCP server** (provides `lookup_type` and `list_types` tools):
+
 ```bash
-claude mcp add type-inject -- npx @nick-vi/claude-type-inject
+# Project-local
+claude mcp add type-inject -- npx @nick-vi/claude-type-inject-mcp
+
+# User-wide (all projects)
+claude mcp add -s user type-inject -- npx @nick-vi/claude-type-inject-mcp
 ```
 
-This adds the MCP server with `lookup_type` and `list_types` tools.
+**2. Add the Read hook** (auto-injects types when reading files):
 
-For automatic type injection on file reads, add to your project's `.claude/settings.json`:
+Add to your project's `.claude/settings.json`:
 
 ```json
 {
@@ -25,7 +31,7 @@ For automatic type injection on file reads, add to your project's `.claude/setti
         "hooks": [
           {
             "type": "command",
-            "command": "npx @nick-vi/claude-type-inject/hooks/post-read.ts"
+            "command": "npx @nick-vi/claude-type-inject-hook"
           }
         ]
       }
@@ -189,12 +195,13 @@ List all type names in the project (includes both TypeScript and Svelte files).
 
 ## Packages
 
-This is a monorepo with three packages:
+This is a monorepo with four packages:
 
 | Package | Description |
 |---------|-------------|
 | `@nick-vi/type-inject-core` | Shared TypeScript extraction library |
-| `@nick-vi/claude-type-inject` | Claude Code plugin (MCP server + hooks) |
+| `@nick-vi/claude-type-inject-mcp` | Claude Code MCP server |
+| `@nick-vi/claude-type-inject-hook` | Claude Code Read hook |
 | `@nick-vi/opencode-type-inject` | OpenCode plugin |
 
 ## License

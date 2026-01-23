@@ -5,9 +5,13 @@
 	"scripts": {
 		"test": "bun --filter '*' test",
 		"typecheck": "bun --filter '*' typecheck",
-		"lint": "bunx biome check ."
+		"lint": "bunx biome check .",
+		"changeset": "changeset",
+		"version": "changeset version && bun update",
+		"release": "npm publish -w packages/core --access public && npm publish -w packages/opencode --access public && npm publish -w packages/claude-mcp --access public && npm publish -w packages/claude-hook --access public && changeset tag"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.3.8"
+		"@biomejs/biome": "^2.3.8",
+		"@changesets/cli": "^2.29.8"
 	}
 }

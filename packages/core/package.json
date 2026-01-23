@@ -1,21 +1,42 @@
 {
 	"name": "@nick-vi/type-inject-core",
-	"version": "0.1.0",
+	"version": "1.0.2",
 	"description": "Core library for TypeScript type extraction and injection",
 	"type": "module",
-	"main": "./lib/index.ts",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
 	"exports": {
-		".": "./lib/index.ts",
-		"./extractor": "./lib/extractor.ts",
-		"./lookup": "./lib/lookup.ts",
-		"./prioritizer": "./lib/prioritizer.ts",
-		"./formatter": "./lib/formatter.ts",
-		"./types": "./lib/types.ts"
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./extractor": {
+			"types": "./dist/extractor.d.ts",
+			"default": "./dist/extractor.js"
+		},
+		"./lookup": {
+			"types": "./dist/lookup.d.ts",
+			"default": "./dist/lookup.js"
+		},
+		"./prioritizer": {
+			"types": "./dist/prioritizer.d.ts",
+			"default": "./dist/prioritizer.js"
+		},
+		"./formatter": {
+			"types": "./dist/formatter.d.ts",
+			"default": "./dist/formatter.js"
+		},
+		"./types": {
+			"types": "./dist/types.d.ts",
+			"default": "./dist/types.js"
+		}
 	},
-	"files": ["lib"],
+	"files": ["dist"],
 	"scripts": {
+		"build": "bun build lib/index.ts lib/extractor.ts lib/lookup.ts lib/prioritizer.ts lib/formatter.ts lib/types.ts --outdir dist --target node --format esm --packages external && tsc -p tsconfig.build.json",
 		"test": "bun test ./tests/*.test.ts",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"prepare": "npm run build"
 	},
 	"peerDependencies": {
 		"typescript": "^5",

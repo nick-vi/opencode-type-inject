@@ -6,12 +6,31 @@
       "name": "type-inject",
       "devDependencies": {
         "@biomejs/biome": "^2.3.8",
-        "@changesets/cli": "^2.27.0",
+        "@changesets/cli": "^2.29.8",
       },
     },
-    "packages/claude": {
-      "name": "@nick-vi/claude-type-inject",
-      "version": "0.1.0",
+    "packages/claude-hook": {
+      "name": "@nick-vi/claude-type-inject-hook",
+      "version": "1.0.0",
+      "bin": {
+        "claude-type-inject-hook": "dist/index.js",
+      },
+      "dependencies": {
+        "@nick-vi/type-inject-core": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "packages/claude-mcp": {
+      "name": "@nick-vi/claude-type-inject-mcp",
+      "version": "1.0.1",
+      "bin": {
+        "claude-type-inject-mcp": "dist/index.js",
+      },
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.0.0",
         "@nick-vi/type-inject-core": "workspace:*",
@@ -19,19 +38,14 @@
       },
       "devDependencies": {
         "@types/bun": "latest",
-        "svelte": "^5.45.8",
       },
       "peerDependencies": {
-        "svelte": "^5.0.0",
         "typescript": "^5",
       },
-      "optionalPeers": [
-        "svelte",
-      ],
     },
     "packages/core": {
       "name": "@nick-vi/type-inject-core",
-      "version": "0.1.0",
+      "version": "1.0.2",
       "dependencies": {
         "ts-morph": "^27.0.2",
       },
@@ -49,7 +63,7 @@
     },
     "packages/opencode": {
       "name": "@nick-vi/opencode-type-inject",
-      "version": "0.1.0",
+      "version": "1.3.1",
       "dependencies": {
         "@nick-vi/type-inject-core": "workspace:*",
       },
@@ -147,7 +161,9 @@
 
     "@modelcontextprotocol/sdk": ["@modelcontextprotocol/sdk@1.25.2", "", { "dependencies": { "@hono/node-server": "^1.19.7", "ajv": "^8.17.1", "ajv-formats": "^3.0.1", "content-type": "^1.0.5", "cors": "^2.8.5", "cross-spawn": "^7.0.5", "eventsource": "^3.0.2", "eventsource-parser": "^3.0.0", "express": "^5.0.1", "express-rate-limit": "^7.5.0", "jose": "^6.1.1", "json-schema-typed": "^8.0.2", "pkce-challenge": "^5.0.0", "raw-body": "^3.0.0", "zod": "^3.25 || ^4.0", "zod-to-json-schema": "^3.25.0" }, "peerDependencies": { "@cfworker/json-schema": "^4.1.1" }, "optionalPeers": ["@cfworker/json-schema"] }, "sha512-LZFeo4F9M5qOhC/Uc1aQSrBHxMrvxett+9KLHt7OhcExtoiRN9DKgbZffMP/nxjutWDQpfMDfP3nkHI4X9ijww=="],
 
-    "@nick-vi/claude-type-inject": ["@nick-vi/claude-type-inject@workspace:packages/claude"],
+    "@nick-vi/claude-type-inject-hook": ["@nick-vi/claude-type-inject-hook@workspace:packages/claude-hook"],
+
+    "@nick-vi/claude-type-inject-mcp": ["@nick-vi/claude-type-inject-mcp@workspace:packages/claude-mcp"],
 
     "@nick-vi/opencode-type-inject": ["@nick-vi/opencode-type-inject@workspace:packages/opencode"],
 

@@ -1,0 +1,29 @@
+{
+	"name": "@nick-vi/claude-type-inject-mcp",
+	"version": "1.0.1",
+	"description": "Claude Code MCP server for TypeScript type lookup",
+	"type": "module",
+	"bin": {
+		"claude-type-inject-mcp": "dist/index.js"
+	},
+	"files": ["dist/"],
+	"scripts": {
+		"build": "bun build src/index.ts --outdir dist --target node --format esm --packages external",
+		"typecheck": "tsc --noEmit",
+		"prepare": "npm run build"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.0.0",
+		"@nick-vi/type-inject-core": "workspace:*",
+		"zod": "^4.3.5"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

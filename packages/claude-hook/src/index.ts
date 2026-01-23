@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import {
 	ContentFormatter,
 	defaultConfig,
@@ -5,7 +6,11 @@ import {
 	TypeExtractor,
 } from "@nick-vi/type-inject-core";
 
-const input = await Bun.stdin.json();
+const chunks: Buffer[] = [];
+for await (const chunk of process.stdin) {
+	chunks.push(chunk);
+}
+const input = JSON.parse(Buffer.concat(chunks).toString());
 const { tool_input } = input;
 
 if (!tool_input) {
