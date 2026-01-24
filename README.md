@@ -1,26 +1,43 @@
 # type-inject
 
-TypeScript type injection plugin for AI coding assistants. Auto-injects type signatures into file reads and provides type lookup tools.
-
-Supports both **Claude Code** and **OpenCode**.
+TypeScript type context for AI coding assistants. Auto-injects type signatures into file reads and provides type lookup tools.
 
 ## Installation
+
+### OpenCode
+
+Full plugin with automatic type injection on file reads and MCP tools:
+
+```json
+{
+  "plugin": ["@nick-vi/opencode-type-inject"]
+}
+```
+
+Or MCP server only (tools only, no auto-injection):
+
+```json
+{
+  "mcp": {
+    "type-inject": {
+      "type": "local",
+      "command": ["npx", "-y", "@nick-vi/type-inject-mcp"]
+    }
+  }
+}
+```
 
 ### Claude Code
 
 **1. Add the MCP server** (provides `lookup_type` and `list_types` tools):
 
 ```bash
-# Project-local
-claude mcp add type-inject -- npx @nick-vi/claude-type-inject-mcp
-
-# User-wide (all projects)
-claude mcp add -s user type-inject -- npx @nick-vi/claude-type-inject-mcp
+claude mcp add type-inject -- npx -y @nick-vi/type-inject-mcp
 ```
 
 **2. Add the Read hook** (auto-injects types when reading files):
 
-Add to your project's `.claude/settings.json`:
+Add to your `.claude/settings.json`:
 
 ```json
 {
@@ -31,7 +48,7 @@ Add to your project's `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "npx @nick-vi/claude-type-inject-hook"
+            "command": "npx -y @nick-vi/claude-type-inject-hook"
           }
         ]
       }
@@ -40,13 +57,18 @@ Add to your project's `.claude/settings.json`:
 }
 ```
 
-### OpenCode
+### Cursor
 
-Add to your `opencode.json`:
+Add to `.cursor/mcp.json`:
 
 ```json
 {
-  "plugin": ["@nick-vi/opencode-type-inject"]
+  "mcpServers": {
+    "type-inject": {
+      "command": "npx",
+      "args": ["-y", "@nick-vi/type-inject-mcp"]
+    }
+  }
 }
 ```
 
@@ -82,7 +104,6 @@ function getUser(id: string): User  // [offset=2,limit=8]
 type User = { id: string; name: string; role: Role; }
 
 type Role = { name: string; permissions: Permission[]; }  // [filePath=./lib/role.ts]
-
 </types>
 ```
 
@@ -200,7 +221,7 @@ This is a monorepo with four packages:
 | Package | Description |
 |---------|-------------|
 | `@nick-vi/type-inject-core` | Shared TypeScript extraction library |
-| `@nick-vi/claude-type-inject-mcp` | Claude Code MCP server |
+| `@nick-vi/type-inject-mcp` | MCP server for TypeScript type lookup |
 | `@nick-vi/claude-type-inject-hook` | Claude Code Read hook |
 | `@nick-vi/opencode-type-inject` | OpenCode plugin |
 

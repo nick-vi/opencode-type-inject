@@ -25,24 +25,6 @@
         "typescript": "^5",
       },
     },
-    "packages/claude-mcp": {
-      "name": "@nick-vi/claude-type-inject-mcp",
-      "version": "1.0.1",
-      "bin": {
-        "claude-type-inject-mcp": "dist/index.js",
-      },
-      "dependencies": {
-        "@modelcontextprotocol/sdk": "^1.0.0",
-        "@nick-vi/type-inject-core": "workspace:*",
-        "zod": "^4.3.5",
-      },
-      "devDependencies": {
-        "@types/bun": "latest",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
-    },
     "packages/core": {
       "name": "@nick-vi/type-inject-core",
       "version": "1.0.2",
@@ -60,6 +42,24 @@
       "optionalPeers": [
         "svelte",
       ],
+    },
+    "packages/mcp": {
+      "name": "@nick-vi/type-inject-mcp",
+      "version": "1.0.0",
+      "bin": {
+        "type-inject-mcp": "dist/index.js",
+      },
+      "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.0.0",
+        "@nick-vi/type-inject-core": "workspace:*",
+        "zod": "^4.3.5",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
     },
     "packages/opencode": {
       "name": "@nick-vi/opencode-type-inject",
@@ -163,11 +163,11 @@
 
     "@nick-vi/claude-type-inject-hook": ["@nick-vi/claude-type-inject-hook@workspace:packages/claude-hook"],
 
-    "@nick-vi/claude-type-inject-mcp": ["@nick-vi/claude-type-inject-mcp@workspace:packages/claude-mcp"],
-
     "@nick-vi/opencode-type-inject": ["@nick-vi/opencode-type-inject@workspace:packages/opencode"],
 
     "@nick-vi/type-inject-core": ["@nick-vi/type-inject-core@workspace:packages/core"],
+
+    "@nick-vi/type-inject-mcp": ["@nick-vi/type-inject-mcp@workspace:packages/mcp"],
 
     "@nodelib/fs.scandir": ["@nodelib/fs.scandir@2.1.5", "", { "dependencies": { "@nodelib/fs.stat": "2.0.5", "run-parallel": "^1.1.9" } }, "sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g=="],
 

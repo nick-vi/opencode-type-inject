@@ -1,10 +1,10 @@
 {
-	"name": "@nick-vi/claude-type-inject-mcp",
+	"name": "@nick-vi/type-inject-mcp",
 	"version": "1.0.1",
-	"description": "Claude Code MCP server for TypeScript type lookup",
+	"description": "MCP server for TypeScript type lookup",
 	"type": "module",
 	"bin": {
-		"claude-type-inject-mcp": "dist/index.js"
+		"type-inject-mcp": "dist/index.js"
 	},
 	"files": ["dist/"],
 	"scripts": {
