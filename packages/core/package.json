@@ -54,6 +54,10 @@
 		"@types/bun": "latest",
 		"svelte": "^5.45.8"
 	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/nick-vi/type-inject"
+	},
 	"publishConfig": {
 		"access": "public"
 	}
