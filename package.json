@@ -11,7 +11,7 @@
 		"release": "npm publish -w packages/core --access public || true; npm publish -w packages/opencode --access public || true; npm publish -w packages/mcp --access public || true; npm publish -w packages/claude-hook --access public || true; changeset tag"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.3.8",
+		"@biomejs/biome": "^2.3.12",
 		"@changesets/cli": "^2.29.8"
 	}
 }
