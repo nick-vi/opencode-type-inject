@@ -6,6 +6,12 @@ import {
 	TypeLookup,
 	defaultConfig,
 } from "@nick-vi/type-inject-core";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf-8"));
 
 const cwd = process.cwd();
 let typeLookup: TypeLookup | null = null;
@@ -18,8 +24,8 @@ function getTypeLookup(): TypeLookup {
 }
 
 const server = new McpServer({
-	name: "type-inject",
-	version: "0.1.0",
+	name: pkg.name,
+	version: pkg.version,
 });
 
 const kindEnum = z.enum(["function", "type", "interface", "enum", "class", "const"]);

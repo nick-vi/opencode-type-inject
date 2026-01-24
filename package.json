@@ -8,7 +8,7 @@
 		"lint": "bunx biome check .",
 		"changeset": "changeset",
 		"version": "changeset version && bun update",
-		"release": "npm publish -w packages/core --access public || true; npm publish -w packages/opencode --access public || true; npm publish -w packages/claude-mcp --access public || true; npm publish -w packages/claude-hook --access public || true; changeset tag"
+		"release": "npm publish -w packages/core --access public || true; npm publish -w packages/opencode --access public || true; npm publish -w packages/mcp --access public || true; npm publish -w packages/claude-hook --access public || true; changeset tag"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.8",
