@@ -1,6 +1,6 @@
 {
 	"name": "@nick-vi/opencode-type-inject",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"description": "OpenCode plugin that auto-injects TypeScript types into file reads",
 	"type": "module",
 	"main": "./.opencode/plugin/type-inject.ts",
@@ -27,6 +27,10 @@
 		"@opencode-ai/plugin": "^1.0.134",
 		"@types/bun": "latest",
 		"svelte": "^5.45.8"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/nick-vi/type-inject"
 	},
 	"publishConfig": {
 		"access": "public"
