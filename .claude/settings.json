@@ -6,7 +6,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "bun run \"$CLAUDE_PROJECT_DIR\"/packages/claude/hooks/post-read.ts"
+						"command": "bun run \"$CLAUDE_PROJECT_DIR\"/packages/claude-hook/src/index.ts"
 					}
 				]
 			}
