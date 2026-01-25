@@ -12,7 +12,7 @@
     },
     "packages/claude-hook": {
       "name": "@nick-vi/claude-type-inject-hook",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "bin": {
         "claude-type-inject-hook": "dist/index.js",
       },
@@ -46,7 +46,7 @@
     },
     "packages/mcp": {
       "name": "@nick-vi/type-inject-mcp",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "bin": {
         "type-inject-mcp": "dist/index.js",
       },
@@ -64,7 +64,7 @@
     },
     "packages/opencode": {
       "name": "@nick-vi/opencode-type-inject",
-      "version": "1.4.1",
+      "version": "1.4.2",
       "dependencies": {
         "@nick-vi/type-inject-core": "workspace:*",
       },

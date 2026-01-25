@@ -1,12 +1,14 @@
 {
 	"name": "@nick-vi/type-inject-mcp",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "MCP server for TypeScript type lookup",
 	"type": "module",
 	"bin": {
 		"type-inject-mcp": "dist/index.js"
 	},
-	"files": ["dist/"],
+	"files": [
+		"dist/"
+	],
 	"scripts": {
 		"build": "bun build src/index.ts --outdir dist --target node --format esm --packages external",
 		"typecheck": "tsc --noEmit",
