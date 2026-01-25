@@ -6,6 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
 	defaultConfig,
+	findNearestTsconfig,
 	formatDiagnostics,
 	getProjectDiagnostics,
 	TypeLookup,
@@ -168,14 +169,18 @@ server.registerTool(
 		},
 	},
 	async ({ file }) => {
-		const tsconfigPath = join(cwd, "tsconfig.json");
+		const tsconfigPath = file
+			? findNearestTsconfig(file, cwd)
+			: join(cwd, "tsconfig.json");
 
-		if (!existsSync(tsconfigPath)) {
+		if (!tsconfigPath || !existsSync(tsconfigPath)) {
 			return {
 				content: [
 					{
 						type: "text",
-						text: `No tsconfig.json found at: ${tsconfigPath}`,
+						text: file
+							? `No tsconfig.json found for file: ${file}`
+							: `No tsconfig.json found at project root`,
 					},
 				],
 				isError: true,

@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { DiagnosticCategory, Project } from "ts-morph";
 
 export type Diagnostic = {
@@ -13,6 +15,30 @@ export type CheckResult = {
 	success: boolean;
 	diagnostics: Diagnostic[];
 };
+
+/**
+ * Find the nearest tsconfig.json starting from filePath and walking up.
+ * Stops at cwd to avoid searching above project root.
+ * Returns null if no tsconfig.json is found.
+ */
+export function findNearestTsconfig(
+	filePath: string,
+	cwd: string,
+): string | null {
+	let dir = dirname(resolve(cwd, filePath));
+
+	while (dir.startsWith(cwd)) {
+		const tsconfigPath = join(dir, "tsconfig.json");
+		if (existsSync(tsconfigPath)) {
+			return tsconfigPath;
+		}
+		const parent = dirname(dir);
+		if (parent === dir) break;
+		dir = parent;
+	}
+
+	return null;
+}
 
 /**
  * Map TypeScript DiagnosticCategory to severity level.

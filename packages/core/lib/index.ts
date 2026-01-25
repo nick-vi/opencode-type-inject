@@ -1,6 +1,7 @@
 export {
 	type CheckResult,
 	type Diagnostic,
+	findNearestTsconfig,
 	formatDiagnostics,
 	getProjectDiagnostics,
 } from "./checker.ts";

@@ -7,6 +7,7 @@ import {
 	defaultConfig,
 	type ExtractedTypeKind,
 	filterVisibleTypes,
+	findNearestTsconfig,
 	formatDiagnostics,
 	getProjectDiagnostics,
 	isBarrelFile,
@@ -212,7 +213,11 @@ export const TypeInjectPlugin: Plugin = async ({ directory }) => {
 						),
 				},
 				async execute(args) {
-					const result = getProjectDiagnostics(tsConfigPath, args.file);
+					const effectiveTsconfig = args.file
+						? findNearestTsconfig(args.file, directory) ?? tsConfigPath
+						: tsConfigPath;
+
+					const result = getProjectDiagnostics(effectiveTsconfig, args.file);
 
 					if (result.success) {
 						if (args.file) {
