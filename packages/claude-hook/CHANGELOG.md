@@ -1,5 +1,12 @@
 # @nick-vi/claude-type-inject-hook
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [15a3e62]
+  - @nick-vi/type-inject-core@1.1.1
+
 ## 1.1.0
 
 ### Minor Changes
