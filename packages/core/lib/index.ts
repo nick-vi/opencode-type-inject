@@ -1,23 +1,25 @@
+export { defaultConfig } from "./config.ts";
 export { TypeExtractor } from "./extractor.ts";
+export { ContentFormatter, type FormatStats } from "./formatter.ts";
 export {
-	TypeLookup,
-	type TypeMatch,
 	type LookupOptions,
 	type LookupResult,
+	TypeLookup,
+	type TypeMatch,
 	type UsageInfo,
 } from "./lookup.ts";
 export {
-	prioritizeTypes,
+	CHARS_PER_TOKEN,
+	filterVisibleTypes,
 	isBarrelFile,
-	type PrioritizerConfig,
 	type PrioritizeResult,
+	type PrioritizerConfig,
+	prioritizeTypes,
 } from "./prioritizer.ts";
-export { ContentFormatter, type FormatStats } from "./formatter.ts";
-export type { ExtractedType, ExtractedTypeKind, Config } from "./types.ts";
-export { defaultConfig } from "./config.ts";
 export {
 	extractSvelteScripts,
 	loadSvelteParser,
-	type SvelteScript,
 	type SvelteParser,
+	type SvelteScript,
 } from "./svelte-utils.ts";
+export type { Config, ExtractedType, ExtractedTypeKind } from "./types.ts";

@@ -13,7 +13,9 @@ import type { ExtractedType } from "./types.ts";
 
 /** Default token budget (~1500 tokens ≈ 6000 chars at 4 chars/token) */
 const DEFAULT_TOKEN_BUDGET = 1500;
-const CHARS_PER_TOKEN = 4;
+
+/** Characters per token estimate for token budget calculations */
+export const CHARS_PER_TOKEN = 4;
 
 export type PrioritizerConfig = {
 	/** Maximum tokens to include (default: 1500) */
@@ -304,6 +306,44 @@ function estimateTokens(type: ExtractedType): number {
 	chars += 10;
 
 	return Math.ceil(chars / CHARS_PER_TOKEN);
+}
+
+/**
+ * Filter out local types that are already visible in the read content.
+ * - Full file read: exclude all local types (already visible in file content)
+ * - Partial read: exclude local types whose definition is within the visible range
+ */
+export function filterVisibleTypes(
+	types: ExtractedType[],
+	lineRange: { offset: number; limit: number } | undefined,
+	totalLines: number,
+): ExtractedType[] {
+	const isFullFile =
+		!lineRange || (lineRange.offset === 0 && lineRange.limit >= totalLines);
+
+	return types.filter((type) => {
+		// Keep all imported types (have sourcePath)
+		if (type.sourcePath) return true;
+
+		// For local types, check if definition is visible
+		const { lineStart, lineEnd } = type;
+		if (lineStart === undefined) return true;
+
+		if (isFullFile) {
+			// Full file read: exclude all local types (already visible)
+			return false;
+		}
+
+		// Partial read: exclude only if FULLY visible (entire definition within range)
+		const visibleStart = lineRange.offset;
+		const visibleEnd = lineRange.offset + lineRange.limit;
+		const typeEnd = lineEnd ?? lineStart;
+
+		// Type is fully visible if completely within the visible range
+		const isFullyVisible = lineStart >= visibleStart && typeEnd < visibleEnd;
+
+		return !isFullyVisible;
+	});
 }
 
 /**

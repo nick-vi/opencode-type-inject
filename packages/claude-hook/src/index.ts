@@ -1,7 +1,10 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
 import {
+	CHARS_PER_TOKEN,
 	ContentFormatter,
 	defaultConfig,
+	filterVisibleTypes,
 	prioritizeTypes,
 	TypeExtractor,
 } from "@nick-vi/type-inject-core";
@@ -33,18 +36,29 @@ try {
 	const formatter = new ContentFormatter(defaultConfig);
 
 	const rawTypes = extractor.extract(filePath, lineRange);
-	const { types, totalTokens } = prioritizeTypes(rawTypes, {
+	const { types: prioritizedTypes } = prioritizeTypes(rawTypes, {
 		tokenBudget: defaultConfig.budget.maxTokens,
 		debug: false,
 	});
+
+	// Filter out local types that are already visible in the read content
+	const fileContent = readFileSync(filePath, "utf-8");
+	const totalLines = fileContent.split("\n").length;
+	const types = filterVisibleTypes(prioritizedTypes, lineRange, totalLines);
 
 	if (types.length === 0) {
 		process.exit(0);
 	}
 
+	// Recalculate tokens for filtered types
+	const estimatedTokens = Math.ceil(
+		types.reduce((sum: number, t) => sum + t.signature.length, 0) /
+			CHARS_PER_TOKEN,
+	);
+
 	const formatted = formatter.formatTypesOnly(types, {
 		totalTypes: types.length,
-		estimatedTokens: totalTokens,
+		estimatedTokens,
 	});
 
 	console.log(

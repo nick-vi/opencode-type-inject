@@ -1,8 +1,10 @@
 import {
+	CHARS_PER_TOKEN,
 	type Config,
 	ContentFormatter,
 	defaultConfig,
 	type ExtractedTypeKind,
+	filterVisibleTypes,
 	isBarrelFile,
 	prioritizeTypes,
 	TypeExtractor,
@@ -273,7 +275,6 @@ export const TypeInjectPlugin: Plugin = async ({ directory }) => {
 					tokenBudget: config.budget.maxTokens,
 					debug: config.debug,
 				});
-				const types = priorityResult.types;
 
 				if (config.debug && priorityResult.budgetExceeded) {
 					console.log(
@@ -281,9 +282,23 @@ export const TypeInjectPlugin: Plugin = async ({ directory }) => {
 					);
 				}
 
+				// Filter out local types that are already visible in the read content
+				const totalLines = originalContent.split("\n").length;
+				const types = filterVisibleTypes(
+					priorityResult.types,
+					lineRange,
+					totalLines,
+				);
+
+				// Recalculate tokens for filtered types
+				const estimatedTokens = Math.ceil(
+					types.reduce((sum: number, t) => sum + t.signature.length, 0) /
+						CHARS_PER_TOKEN,
+				);
+
 				const injected = formatter.format(originalContent, types, {
 					totalTypes: types.length,
-					estimatedTokens: priorityResult.totalTokens,
+					estimatedTokens,
 				});
 
 				if (config.debug) {
