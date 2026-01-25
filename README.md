@@ -29,15 +29,28 @@ Or MCP server only (tools only, no auto-injection):
 
 ### Claude Code
 
+One-liner install (adds MCP server + Read hook):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nick-vi/type-inject/main/scripts/claude-install.sh | bash
+```
+
+<details>
+<summary>Manual installation</summary>
+
 **1. Add the MCP server** (provides `lookup_type` and `list_types` tools):
 
 ```bash
+# Global (all projects)
+claude mcp add type-inject -s user -- npx -y @nick-vi/type-inject-mcp
+
+# Or project-only
 claude mcp add type-inject -- npx -y @nick-vi/type-inject-mcp
 ```
 
 **2. Add the Read hook** (auto-injects types when reading files):
 
-Add to your `.claude/settings.json`:
+Add to your `~/.claude/settings.json`:
 
 ```json
 {
@@ -56,6 +69,8 @@ Add to your `.claude/settings.json`:
   }
 }
 ```
+
+</details>
 
 ### Cursor
 
