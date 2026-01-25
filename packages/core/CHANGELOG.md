@@ -1,4 +1,4 @@
-# @nick-vi/type-inject-mcp
+# @nick-vi/type-inject-core
 
 ## 1.1.0
 
@@ -10,14 +10,3 @@
   - Add `type_check` to OpenCode plugin
   - Add Write hook for automatic type error feedback on file writes
   - Add severity field to Diagnostic type
-
-### Patch Changes
-
-- Updated dependencies [f0ff10b]
-  - @nick-vi/type-inject-core@1.1.0
-
-## 1.0.2
-
-### Patch Changes
-
-- 286b379: Fix workspace:\* dependency resolution for npm installs
