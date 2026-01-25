@@ -1,10 +1,15 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { defaultConfig, TypeLookup } from "@nick-vi/type-inject-core";
+import {
+	defaultConfig,
+	formatDiagnostics,
+	getProjectDiagnostics,
+	TypeLookup,
+} from "@nick-vi/type-inject-core";
 import { z } from "zod";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -149,6 +154,62 @@ server.registerTool(
 		lines.push(results.map((r) => `${r.name} (${r.kind})`).join(", "));
 
 		return { content: [{ type: "text", text: lines.join("\n") }] };
+	},
+);
+
+server.registerTool(
+	"type_check",
+	{
+		title: "Type Check",
+		description:
+			"Run TypeScript type checking on the project or a specific file. Returns any type errors found.",
+		inputSchema: {
+			file: z.string().optional(),
+		},
+	},
+	async ({ file }) => {
+		const tsconfigPath = join(cwd, "tsconfig.json");
+
+		if (!existsSync(tsconfigPath)) {
+			return {
+				content: [
+					{
+						type: "text",
+						text: `No tsconfig.json found at: ${tsconfigPath}`,
+					},
+				],
+				isError: true,
+			};
+		}
+
+		const result = getProjectDiagnostics(tsconfigPath, file);
+
+		if (result.success || result.diagnostics.length === 0) {
+			const target = file ? `File "${file}"` : "Project";
+			return {
+				content: [
+					{
+						type: "text",
+						text: `${target} has no TypeScript errors.`,
+					},
+				],
+			};
+		}
+
+		const formatted = formatDiagnostics(result.diagnostics, cwd, {
+			modifiedFile: file,
+			maxFileErrors: 50,
+			maxProjectFiles: 20,
+		});
+
+		const lines: string[] = [];
+		lines.push(`Found ${result.diagnostics.length} TypeScript error(s):`);
+		lines.push("");
+		lines.push(formatted);
+
+		return {
+			content: [{ type: "text", text: lines.join("\n") }],
+		};
 	},
 );
 

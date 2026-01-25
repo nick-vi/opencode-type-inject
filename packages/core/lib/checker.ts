@@ -1,4 +1,4 @@
-import { Project } from "ts-morph";
+import { DiagnosticCategory, Project } from "ts-morph";
 
 export type Diagnostic = {
 	file: string;
@@ -6,12 +6,33 @@ export type Diagnostic = {
 	col: number;
 	message: string;
 	code: number;
+	severity: number; // 1=Error, 2=Warning, 3=Info, 4=Hint
 };
 
 export type CheckResult = {
 	success: boolean;
 	diagnostics: Diagnostic[];
 };
+
+/**
+ * Map TypeScript DiagnosticCategory to severity level.
+ * TypeScript: Warning=0, Error=1, Suggestion=2, Message=3
+ * Severity: 1=Error, 2=Warning, 3=Info, 4=Hint
+ */
+function mapCategoryToSeverity(category: DiagnosticCategory): number {
+	switch (category) {
+		case DiagnosticCategory.Error:
+			return 1;
+		case DiagnosticCategory.Warning:
+			return 2;
+		case DiagnosticCategory.Message:
+			return 3;
+		case DiagnosticCategory.Suggestion:
+			return 4;
+		default:
+			return 1;
+	}
+}
 
 export function getProjectDiagnostics(
 	tsconfigPath: string,
@@ -49,6 +70,7 @@ export function getProjectDiagnostics(
 				col: lineAndCol.column,
 				message: diagnostic.getMessageText().toString(),
 				code: diagnostic.getCode(),
+				severity: mapCategoryToSeverity(diagnostic.getCategory()),
 			});
 		}
 
@@ -75,20 +97,22 @@ export function formatDiagnostics(
 ): string {
 	const { modifiedFile, maxFileErrors = 20, maxProjectFiles = 5 } = options;
 
-	if (diagnostics.length === 0) {
+	const errorDiagnostics = diagnostics.filter((d) => d.severity === 1);
+
+	if (errorDiagnostics.length === 0) {
 		return "";
 	}
 
 	const fileErrors = modifiedFile
-		? diagnostics.filter(
+		? errorDiagnostics.filter(
 				(d) => d.file === modifiedFile || d.file.endsWith(modifiedFile),
 			)
 		: [];
 	const otherErrors = modifiedFile
-		? diagnostics.filter(
+		? errorDiagnostics.filter(
 				(d) => d.file !== modifiedFile && !d.file.endsWith(modifiedFile),
 			)
-		: diagnostics;
+		: errorDiagnostics;
 
 	const lines: string[] = [];
 
@@ -105,7 +129,7 @@ export function formatDiagnostics(
 	}
 
 	if (otherErrors.length > 0) {
-		lines.push("TypeScript errors in other files caused by this change:");
+		lines.push("TypeScript errors in other project files:");
 		lines.push("<project_diagnostics>");
 
 		const byFile = new Map<string, Diagnostic[]>();

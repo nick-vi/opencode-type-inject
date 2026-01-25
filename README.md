@@ -119,7 +119,7 @@ TypeScript errors in the file you just wrote:
 <file_diagnostics>
 ERROR [5:2] Type 'string' is not assignable to type 'boolean'.
 </file_diagnostics>
-TypeScript errors in other files caused by this change:
+TypeScript errors in other project files:
 <project_diagnostics>
 src/utils.ts
   ERROR [12:5] Property 'foo' does not exist on type 'User'.
@@ -128,12 +128,20 @@ src/utils.ts
 
 This gives the LLM immediate feedback to fix type errors without manual intervention.
 
+**How it works:**
+- Only reports errors (not warnings or hints)
+- Shows errors in the written file first (`<file_diagnostics>`)
+- Shows errors in other project files (`<project_diagnostics>`)
+- Limits: 20 errors per file, 5 files max for project diagnostics
+- Requires a `tsconfig.json` in the project (searches up from the file)
+
 ### MCP Tools
 
-The plugin provides two tools:
+The plugin provides three tools:
 
 - **`lookup_type`** - Look up any type by name without reading files
 - **`list_types`** - List all types in the project
+- **`type_check`** - Run TypeScript type checking on the project or a specific file
 
 ## Example Output
 
@@ -258,6 +266,32 @@ List all type names in the project (includes both TypeScript and Svelte files).
 **Arguments:**
 - `kind` (optional): Filter by kind
 - `limit` (optional): Maximum results. Default: 100
+
+### `type_check`
+
+Run TypeScript type checking on the project or a specific file.
+
+**Arguments:**
+- `file` (optional): File path to check. If omitted, checks the entire project.
+
+**Output:**
+```
+TypeScript errors in the file you just wrote:
+<file_diagnostics>
+ERROR [5:2] Type 'string' is not assignable to type 'boolean'.
+</file_diagnostics>
+```
+
+Or for project-wide check:
+```
+TypeScript errors in other project files:
+<project_diagnostics>
+src/utils.ts
+  ERROR [12:5] Property 'foo' does not exist on type 'User'.
+</project_diagnostics>
+```
+
+Returns a success message if no errors are found.
 
 ## Packages
 

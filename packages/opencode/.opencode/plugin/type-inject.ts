@@ -7,6 +7,8 @@ import {
 	defaultConfig,
 	type ExtractedTypeKind,
 	filterVisibleTypes,
+	formatDiagnostics,
+	getProjectDiagnostics,
 	isBarrelFile,
 	prioritizeTypes,
 	TypeExtractor,
@@ -195,6 +197,43 @@ export const TypeInjectPlugin: Plugin = async ({ directory }) => {
 					lines.push(results.map((r) => `${r.name} (${r.kind})`).join(", "));
 
 					return lines.join("\n");
+				},
+			}),
+
+			type_check: tool({
+				description:
+					"Run TypeScript type checking on the project or a specific file. Returns diagnostic errors if any type issues are found.",
+				args: {
+					file: tool.schema
+						.string()
+						.optional()
+						.describe(
+							"File path to check. If omitted, checks the entire project.",
+						),
+				},
+				async execute(args) {
+					const result = getProjectDiagnostics(tsConfigPath, args.file);
+
+					if (result.success) {
+						if (args.file) {
+							return `No TypeScript errors found in ${args.file}`;
+						}
+						return "No TypeScript errors found in the project";
+					}
+
+					const formatted = formatDiagnostics(
+						result.diagnostics,
+						directory,
+						args.file
+							? { modifiedFile: args.file, maxFileErrors: 50 }
+							: { maxProjectFiles: 20 },
+					);
+
+					const header = args.file
+						? `TypeScript errors found in ${args.file}:`
+						: `TypeScript errors found in project (${result.diagnostics.length} total):`;
+
+					return `${header}\n\n${formatted}`;
 				},
 			}),
 		},
