@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import {
+	type ExtractedType,
 	isBarrelFile,
 	prioritizeTypes,
-	type ExtractedType,
 } from "../lib/index.ts";
 
 describe("prioritizeTypes", () => {

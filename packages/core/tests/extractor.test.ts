@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import * as path from "node:path";
-import { TypeExtractor, type Config } from "../lib/index.ts";
+import { type Config, TypeExtractor } from "../lib/index.ts";
 
 const testConfig: Config = {
 	enabled: true,

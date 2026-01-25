@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { ContentFormatter, type Config, type ExtractedType } from "../lib/index.ts";
+import {
+	type Config,
+	ContentFormatter,
+	type ExtractedType,
+} from "../lib/index.ts";
 
 const testConfig: Config = {
 	enabled: true,

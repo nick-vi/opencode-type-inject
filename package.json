@@ -1,7 +1,9 @@
 {
 	"name": "type-inject",
 	"private": true,
-	"workspaces": ["packages/*"],
+	"workspaces": [
+		"packages/*"
+	],
 	"scripts": {
 		"test": "bun --filter '*' test",
 		"typecheck": "bun --filter '*' typecheck",

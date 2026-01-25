@@ -6,9 +6,9 @@ import {
 	VariableDeclarationKind,
 } from "ts-morph";
 import {
-	type SvelteParser,
 	extractSvelteScripts,
 	loadSvelteParser,
+	type SvelteParser,
 } from "./svelte-utils.ts";
 import type { Config, ExtractedType } from "./types.ts";
 

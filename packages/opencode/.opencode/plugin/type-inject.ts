@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import {
 	CHARS_PER_TOKEN,
 	type Config,
@@ -11,8 +13,6 @@ import {
 	TypeLookup,
 } from "@nick-vi/type-inject-core";
 import { type Plugin, tool } from "@opencode-ai/plugin";
-import { existsSync } from "fs";
-import path from "path";
 
 export const TypeInjectPlugin: Plugin = async ({ directory }) => {
 	const config: Config = defaultConfig;

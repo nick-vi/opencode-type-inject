@@ -31,7 +31,9 @@
 			"default": "./dist/types.js"
 		}
 	},
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"scripts": {
 		"build": "bun build lib/index.ts lib/extractor.ts lib/lookup.ts lib/prioritizer.ts lib/formatter.ts lib/types.ts --outdir dist --target node --format esm --packages external && tsc -p tsconfig.build.json",
 		"test": "bun test ./tests/*.test.ts",

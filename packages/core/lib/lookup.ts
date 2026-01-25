@@ -7,9 +7,9 @@ import {
 	VariableDeclarationKind,
 } from "ts-morph";
 import {
-	type SvelteParser,
 	extractSvelteScripts,
 	loadSvelteParser,
+	type SvelteParser,
 } from "./svelte-utils.ts";
 import type { Config, ExtractedTypeKind } from "./types.ts";
 
@@ -239,7 +239,7 @@ export class TypeLookup {
 					this.config.debug,
 				);
 
-				for (const { sourceFile, lineOffset, isModule } of scripts) {
+				for (const { sourceFile, lineOffset } of scripts) {
 					// Store line offset and source file for this Svelte file
 					this.svelteLineOffsets.set(svelteFilePath, lineOffset);
 					this.svelteSourceFiles.set(svelteFilePath, sourceFile);

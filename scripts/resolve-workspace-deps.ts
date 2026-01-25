@@ -7,7 +7,7 @@
 
 import { Glob } from "bun";
 
-const rootDir = import.meta.dir + "/..";
+const rootDir = `${import.meta.dir}/..`;
 const packagesDir = `${rootDir}/packages`;
 
 // Find all package.json files
@@ -39,7 +39,11 @@ for (const pkgPath of packageJsonPaths) {
 	const pkg = await Bun.file(pkgPath).json();
 	let pkgModified = false;
 
-	for (const depType of ["dependencies", "devDependencies", "peerDependencies"] as const) {
+	for (const depType of [
+		"dependencies",
+		"devDependencies",
+		"peerDependencies",
+	] as const) {
 		const deps = pkg[depType] as Record<string, string> | undefined;
 		if (!deps) continue;
 
@@ -53,7 +57,9 @@ for (const pkgPath of packageJsonPaths) {
 						prefix = "~";
 					}
 					const newVersion = `${prefix}${actualVersion}`;
-					console.log(`  ${pkg.name}: ${depName} ${depVersion} -> ${newVersion}`);
+					console.log(
+						`  ${pkg.name}: ${depName} ${depVersion} -> ${newVersion}`,
+					);
 					deps[depName] = newVersion;
 					pkgModified = true;
 				} else {
@@ -64,7 +70,7 @@ for (const pkgPath of packageJsonPaths) {
 	}
 
 	if (pkgModified) {
-		await Bun.write(pkgPath, JSON.stringify(pkg, null, "\t") + "\n");
+		await Bun.write(pkgPath, `${JSON.stringify(pkg, null, "\t")}\n`);
 		modified = true;
 	}
 }

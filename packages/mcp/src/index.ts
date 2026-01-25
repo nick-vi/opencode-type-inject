@@ -1,17 +1,16 @@
 #!/usr/bin/env node
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
-import {
-	TypeLookup,
-	defaultConfig,
-} from "@nick-vi/type-inject-core";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { defaultConfig, TypeLookup } from "@nick-vi/type-inject-core";
+import { z } from "zod";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const pkg = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf-8"));
+const pkg = JSON.parse(
+	readFileSync(join(__dirname, "../package.json"), "utf-8"),
+);
 
 const cwd = process.cwd();
 let typeLookup: TypeLookup | null = null;
@@ -28,13 +27,21 @@ const server = new McpServer({
 	version: pkg.version,
 });
 
-const kindEnum = z.enum(["function", "type", "interface", "enum", "class", "const"]);
+const kindEnum = z.enum([
+	"function",
+	"type",
+	"interface",
+	"enum",
+	"class",
+	"const",
+]);
 
 server.registerTool(
 	"lookup_type",
 	{
 		title: "Lookup Type",
-		description: "Look up TypeScript type definitions by name. Returns the full type signature, file location, and optionally where it's used.",
+		description:
+			"Look up TypeScript type definitions by name. Returns the full type signature, file location, and optionally where it's used.",
 		inputSchema: {
 			name: z.string(),
 			exact: z.boolean().optional(),
@@ -53,18 +60,24 @@ server.registerTool(
 		});
 
 		if (!result.found) {
-			return { content: [{ type: "text", text: `No types found matching "${name}"` }] };
+			return {
+				content: [{ type: "text", text: `No types found matching "${name}"` }],
+			};
 		}
 
 		const lines: string[] = [];
-		lines.push(`Found ${result.totalMatches} type(s) matching "${name}" (showing ${result.types.length}):`);
+		lines.push(
+			`Found ${result.totalMatches} type(s) matching "${name}" (showing ${result.types.length}):`,
+		);
 		lines.push("");
 
 		for (const type of result.types) {
 			lines.push(`## ${type.name} (${type.kind})`);
 			const offset = type.line - 1;
 			const lineLimit = type.lineEnd - type.line + 1;
-			lines.push(`File: ${type.relativePath} [offset=${offset},limit=${lineLimit}]`);
+			lines.push(
+				`File: ${type.relativePath} [offset=${offset},limit=${lineLimit}]`,
+			);
 			if (type.exported) lines.push("Exported: yes");
 			if (type.jsdoc) lines.push(`JSDoc: ${type.jsdoc}`);
 			if (type.generics?.length) {
@@ -89,7 +102,9 @@ server.registerTool(
 		}
 
 		if (result.totalMatches > result.types.length) {
-			lines.push(`(${result.totalMatches - result.types.length} more results not shown)`);
+			lines.push(
+				`(${result.totalMatches - result.types.length} more results not shown)`,
+			);
 		}
 
 		lines.push(`Search time: ${result.searchTimeMs}ms`);
@@ -105,7 +120,8 @@ server.registerTool(
 	"list_types",
 	{
 		title: "List Types",
-		description: "List all TypeScript type names in the project. Useful for discovering available types.",
+		description:
+			"List all TypeScript type names in the project. Useful for discovering available types.",
 		inputSchema: {
 			kind: z.array(kindEnum).optional(),
 			limit: z.number().optional(),
@@ -119,12 +135,16 @@ server.registerTool(
 		});
 
 		if (results.length === 0) {
-			return { content: [{ type: "text", text: "No types found in the project" }] };
+			return {
+				content: [{ type: "text", text: "No types found in the project" }],
+			};
 		}
 
 		const stats = lookup.getStats();
 		const lines: string[] = [];
-		lines.push(`Found ${stats.totalTypes} types in ${stats.totalFiles} files. Showing ${results.length}:`);
+		lines.push(
+			`Found ${stats.totalTypes} types in ${stats.totalFiles} files. Showing ${results.length}:`,
+		);
 		lines.push("");
 		lines.push(results.map((r) => `${r.name} (${r.kind})`).join(", "));
 
