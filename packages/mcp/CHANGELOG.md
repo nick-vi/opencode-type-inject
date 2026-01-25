@@ -1,5 +1,16 @@
 # @nick-vi/type-inject-mcp
 
+## 1.1.1
+
+### Patch Changes
+
+- 15a3e62: type_check now finds nearest tsconfig.json for better monorepo support
+
+  When checking a specific file, type_check now searches for the nearest tsconfig.json starting from the file's directory, enabling proper path alias resolution in monorepos.
+
+- Updated dependencies [15a3e62]
+  - @nick-vi/type-inject-core@1.1.1
+
 ## 1.1.0
 
 ### Minor Changes
