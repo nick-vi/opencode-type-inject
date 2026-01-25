@@ -8,10 +8,11 @@
 		"lint": "bunx biome check .",
 		"changeset": "changeset",
 		"version": "changeset version && bun update",
-		"release": "changeset publish"
+		"release": "bun run scripts/resolve-workspace-deps.ts && changeset publish"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.12",
-		"@changesets/cli": "^2.29.8"
+		"@changesets/cli": "^2.29.8",
+		"@types/bun": "latest"
 	}
 }

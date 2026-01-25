@@ -5,8 +5,9 @@
     "": {
       "name": "type-inject",
       "devDependencies": {
-        "@biomejs/biome": "^2.3.8",
+        "@biomejs/biome": "^2.3.12",
         "@changesets/cli": "^2.29.8",
+        "@types/bun": "latest",
       },
     },
     "packages/claude-hook": {
@@ -63,7 +64,7 @@
     },
     "packages/opencode": {
       "name": "@nick-vi/opencode-type-inject",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "dependencies": {
         "@nick-vi/type-inject-core": "workspace:*",
       },
