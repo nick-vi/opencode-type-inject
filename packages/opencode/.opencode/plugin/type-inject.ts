@@ -299,6 +299,8 @@ export const TypeInjectPlugin: Plugin = async ({ directory }) => {
 				const injected = formatter.format(originalContent, types, {
 					totalTypes: types.length,
 					estimatedTokens,
+					isPartialRead: lineRange !== undefined,
+					includeDescription: false,
 				});
 
 				if (config.debug) {

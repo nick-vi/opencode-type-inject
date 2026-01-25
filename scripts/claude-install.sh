@@ -16,7 +16,7 @@ claude mcp add type-inject -s user -- npx -y @nick-vi/type-inject-mcp 2>/dev/nul
 # Merge hook into settings.json
 SETTINGS_FILE="$HOME/.claude/settings.json"
 
-echo "Configuring Read hook..."
+echo "Configuring hooks..."
 
 # Create settings file if it doesn't exist
 if [ ! -f "$SETTINGS_FILE" ]; then
@@ -50,15 +50,15 @@ try {
 if (!settings.hooks) settings.hooks = {};
 if (!settings.hooks.PostToolUse) settings.hooks.PostToolUse = [];
 
-// Check if hook already exists
 const hookCommand = 'npx -y @nick-vi/claude-type-inject-hook';
-const exists = settings.hooks.PostToolUse.some(h =>
+
+// Add Read hook if not exists
+const readExists = settings.hooks.PostToolUse.some(h =>
     h.matcher === 'Read' &&
     h.hooks?.some(hh => hh.command === hookCommand)
 );
 
-if (!exists) {
-    // Add the hook
+if (!readExists) {
     settings.hooks.PostToolUse.push({
         matcher: 'Read',
         hooks: [{
@@ -66,16 +66,38 @@ if (!exists) {
             command: hookCommand
         }]
     });
-    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
-    console.log('Hook added successfully.');
+    console.log('Read hook added.');
 } else {
-    console.log('Hook already configured.');
+    console.log('Read hook already configured.');
 }
+
+// Add Write hook if not exists
+const writeExists = settings.hooks.PostToolUse.some(h =>
+    h.matcher === 'Write' &&
+    h.hooks?.some(hh => hh.command === hookCommand)
+);
+
+if (!writeExists) {
+    settings.hooks.PostToolUse.push({
+        matcher: 'Write',
+        hooks: [{
+            type: 'command',
+            command: hookCommand
+        }]
+    });
+    console.log('Write hook added.');
+} else {
+    console.log('Write hook already configured.');
+}
+
+// Save settings
+fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
 "
 
 echo ""
 echo "✓ Installation complete!"
 echo ""
 echo "Restart Claude Code to activate. You'll get:"
-echo "  • Automatic type injection when reading files"
+echo "  • Automatic type injection when reading TS files"
+echo "  • Type error feedback when writing TS files"
 echo "  • lookup_type and list_types MCP tools"

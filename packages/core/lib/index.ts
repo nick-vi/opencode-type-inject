@@ -1,3 +1,9 @@
+export {
+	type CheckResult,
+	type Diagnostic,
+	formatDiagnostics,
+	getProjectDiagnostics,
+} from "./checker.ts";
 export { defaultConfig } from "./config.ts";
 export { TypeExtractor } from "./extractor.ts";
 export { ContentFormatter, type FormatStats } from "./formatter.ts";

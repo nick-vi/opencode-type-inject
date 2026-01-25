@@ -9,6 +9,15 @@
 						"command": "bun run \"$CLAUDE_PROJECT_DIR\"/packages/claude-hook/src/index.ts"
 					}
 				]
+			},
+			{
+				"matcher": "Write",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bun run \"$CLAUDE_PROJECT_DIR\"/packages/claude-hook/src/index.ts"
+					}
+				]
 			}
 		]
 	}

@@ -38,7 +38,12 @@ describe("ContentFormatter", () => {
 			},
 		];
 
-		const result = formatter.format("// original content", types);
+		const result = formatter.format("// original content", types, {
+			totalTypes: types.length,
+			estimatedTokens: 100,
+			isPartialRead: false,
+			includeDescription: false,
+		});
 
 		// Should contain the location comment
 		expect(result).toContain("// [offset=10,limit=16]");
@@ -58,7 +63,12 @@ describe("ContentFormatter", () => {
 			},
 		];
 
-		const result = formatter.format("// original content", types);
+		const result = formatter.format("// original content", types, {
+			totalTypes: types.length,
+			estimatedTokens: 100,
+			isPartialRead: false,
+			includeDescription: false,
+		});
 
 		// Should contain the location comment
 		expect(result).toContain("// [offset=5,limit=46]");
@@ -78,7 +88,12 @@ describe("ContentFormatter", () => {
 			},
 		];
 
-		const result = formatter.format("// original content", types);
+		const result = formatter.format("// original content", types, {
+			totalTypes: types.length,
+			estimatedTokens: 100,
+			isPartialRead: false,
+			includeDescription: false,
+		});
 
 		// Should NOT contain location comment for local types
 		expect(result).not.toContain("[offset=");
@@ -101,7 +116,12 @@ describe("ContentFormatter", () => {
 			},
 		];
 
-		const result = formatter.format("// original content", types);
+		const result = formatter.format("// original content", types, {
+			totalTypes: types.length,
+			estimatedTokens: 100,
+			isPartialRead: false,
+			includeDescription: false,
+		});
 
 		// Should contain filePath only (no offset/limit for types)
 		expect(result).toContain("// [filePath=lib/permission.ts]");
@@ -124,7 +144,12 @@ describe("ContentFormatter", () => {
 			},
 		];
 
-		const result = formatter.format("// original content", types);
+		const result = formatter.format("// original content", types, {
+			totalTypes: types.length,
+			estimatedTokens: 100,
+			isPartialRead: false,
+			includeDescription: false,
+		});
 
 		// Should contain filePath for transitive import
 		expect(result).toContain(
@@ -148,7 +173,12 @@ describe("ContentFormatter", () => {
 			},
 		];
 
-		const result = formatter.format("// original content", types);
+		const result = formatter.format("// original content", types, {
+			totalTypes: types.length,
+			estimatedTokens: 100,
+			isPartialRead: false,
+			includeDescription: false,
+		});
 
 		// Should NOT contain filePath for direct import
 		expect(result).not.toContain("filePath=");
@@ -168,7 +198,12 @@ describe("ContentFormatter", () => {
 			},
 		];
 
-		const result = formatter.format("// original content", types);
+		const result = formatter.format("// original content", types, {
+			totalTypes: types.length,
+			estimatedTokens: 100,
+			isPartialRead: false,
+			includeDescription: false,
+		});
 
 		// Should not crash, should not add location comment
 		expect(result).toContain("function noLineInfo(): void");

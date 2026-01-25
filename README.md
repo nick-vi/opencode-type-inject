@@ -1,6 +1,6 @@
 # type-inject
 
-TypeScript type context for AI coding assistants. Auto-injects type signatures into file reads and provides type lookup tools.
+TypeScript type context for AI coding assistants. Auto-injects type signatures into file reads, provides type error feedback on writes, and offers type lookup tools.
 
 ## Installation
 
@@ -29,7 +29,7 @@ Or MCP server only (tools only, no auto-injection):
 
 ### Claude Code
 
-One-liner install (adds MCP server + Read hook):
+One-liner install (adds MCP server + hooks):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/nick-vi/type-inject/main/scripts/claude-install.sh | bash
@@ -48,7 +48,7 @@ claude mcp add type-inject -s user -- npx -y @nick-vi/type-inject-mcp
 claude mcp add type-inject -- npx -y @nick-vi/type-inject-mcp
 ```
 
-**2. Add the Read hook** (auto-injects types when reading files):
+**2. Add the hooks** (type injection on reads, type checking on writes):
 
 Add to your `~/.claude/settings.json`:
 
@@ -58,6 +58,15 @@ Add to your `~/.claude/settings.json`:
     "PostToolUse": [
       {
         "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx -y @nick-vi/claude-type-inject-hook"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
         "hooks": [
           {
             "type": "command",
@@ -101,6 +110,24 @@ When an LLM reads a TypeScript or Svelte file, this plugin automatically:
 
 For partial file reads (with offset/limit), only types relevant to that section are injected.
 
+### Type Checking (Write Hook - Claude Code only)
+
+When an LLM writes a TypeScript file, the hook runs type checking and reports errors:
+
+```
+TypeScript errors in the file you just wrote:
+<file_diagnostics>
+ERROR [5:2] Type 'string' is not assignable to type 'boolean'.
+</file_diagnostics>
+TypeScript errors in other files caused by this change:
+<project_diagnostics>
+src/utils.ts
+  ERROR [12:5] Property 'foo' does not exist on type 'User'.
+</project_diagnostics>
+```
+
+This gives the LLM immediate feedback to fix type errors without manual intervention.
+
 ### MCP Tools
 
 The plugin provides two tools:
@@ -112,7 +139,8 @@ The plugin provides two tools:
 
 When reading a file, the LLM receives additional context:
 
-```typescript
+```
+Type definitions referenced in this file but defined elsewhere:
 <types count="3" tokens="~85">
 function getUser(id: string): User  // [offset=2,limit=8]
 
@@ -121,6 +149,8 @@ type User = { id: string; name: string; role: Role; }
 type Role = { name: string; permissions: Permission[]; }  // [filePath=./lib/role.ts]
 </types>
 ```
+
+For partial reads (with offset/limit), the description changes to "Type definitions referenced in this range..."
 
 ## Key Features
 
@@ -237,7 +267,7 @@ This is a monorepo with four packages:
 |---------|-------------|
 | `@nick-vi/type-inject-core` | Shared TypeScript extraction library |
 | `@nick-vi/type-inject-mcp` | MCP server for TypeScript type lookup |
-| `@nick-vi/claude-type-inject-hook` | Claude Code Read hook |
+| `@nick-vi/claude-type-inject-hook` | Claude Code hooks (Read + Write) |
 | `@nick-vi/opencode-type-inject` | OpenCode plugin |
 
 ## License
