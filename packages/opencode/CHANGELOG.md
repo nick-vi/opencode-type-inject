@@ -1,5 +1,11 @@
 # @nick-vi/opencode-type-inject
 
+## 1.4.2
+
+### Patch Changes
+
+- 286b379: Fix workspace:\* dependency resolution for npm installs
+
 ## 1.4.0
 
 ### Minor Changes

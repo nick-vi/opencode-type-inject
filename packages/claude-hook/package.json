@@ -1,12 +1,14 @@
 {
 	"name": "@nick-vi/claude-type-inject-hook",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Claude Code Read hook for TypeScript type injection",
 	"type": "module",
 	"bin": {
 		"claude-type-inject-hook": "dist/index.js"
 	},
-	"files": ["dist/"],
+	"files": [
+		"dist/"
+	],
 	"scripts": {
 		"build": "bun build src/index.ts --outdir dist --target node --format esm --packages external",
 		"typecheck": "tsc --noEmit",
